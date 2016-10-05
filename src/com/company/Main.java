@@ -1,6 +1,5 @@
 package com.company;
-import java.io.FileReader;
-import java.io.BufferedReader;
+import java.io.*;
 import java.util.Random;
 import java.util.Scanner;
 
@@ -83,6 +82,14 @@ public class Main {
 
         int evalOpt = scanner.nextInt();
 
+        System.out.print("\nSave model? (Y/N) ");
+        String isSave = scanner.next();
+        String modelName = "tree";
+        if (isSave.equals("Y")) {
+            System.out.print("Masukkan nama model: ");
+            modelName = scanner.next();
+        }
+
         if ((evalOpt == 1) || (evalOpt == 4)) {
             System.out.print("Masukkan file arff: ");
             String testfile = scanner.next();
@@ -119,14 +126,14 @@ public class Main {
                 treeID3.buildClassifier(train);
                 System.out.println("\n\n" + treeID3.toString());
                 evaluateWekaModel(evalOpt, treeID3, test);
-
+                saveModel(isSave, modelName, treeID3);
                 break;
             case 2:
                 J48 treeJ48 = new J48();
                 treeJ48.buildClassifier(train);
                 System.out.println("\n\n" + treeJ48.toString());
                 evaluateWekaModel(evalOpt, treeJ48, test);
-
+                saveModel(isSave, modelName, treeJ48);
                 break;
             case 3:
                 Id3 treeMyID3 = new Id3();
@@ -157,4 +164,15 @@ public class Main {
         System.out.println(eval.toSummaryString("\n\n\nResult\n======", false));
     }
 
+     private static void saveModel(String isSave, String modelName, Classifier tree) throws IOException {
+            if (isSave.equals("Y")) {
+                ObjectOutputStream oos = new ObjectOutputStream(
+                        new FileOutputStream("savedmodel/" + modelName + ".model"));
+
+                oos.writeObject(tree);
+
+                oos.flush();
+                oos.close();
+            }
+    }
 }
