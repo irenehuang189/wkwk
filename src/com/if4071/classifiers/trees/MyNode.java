@@ -8,30 +8,30 @@ import java.util.Map;
  */
 public class MyNode {
     private Map<String, MyNode> children = new LinkedHashMap<>();
-    private String value;
+    private String label;
 
     public MyNode() {
 
     }
 
-    public MyNode(String value) {
-        this.value = value;
+    public MyNode(String label) {
+        this.label = label;
     }
 
     public Map<String, MyNode> getChildren() {
         return children;
     }
 
-    public String getValue() {
-        return value;
+    public String getLabel() {
+        return label;
     }
 
     public void setChildren(Map<String, MyNode> children) {
         this.children = children;
     }
 
-    public void setValue(String value) {
-        this.value = value;
+    public void setLabel(String label) {
+        this.label = label;
     }
 
     public MyNode getChild(String attributeValue) {
@@ -47,7 +47,7 @@ public class MyNode {
     }
 
     public void print(String tab, String attributeValue) {
-        System.out.println(tab + attributeValue + value);
+        System.out.println(tab + attributeValue + label);
         for (Map.Entry<String, MyNode> child : children.entrySet()) {
             child.getValue().print(tab + "\t", child.getKey() + " - ");
         }
