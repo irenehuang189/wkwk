@@ -7,6 +7,7 @@ import weka.core.Instances;
 import weka.core.converters.ArffLoader.ArffReader;
 import weka.filters.Filter;
 import weka.filters.unsupervised.attribute.Discretize;
+import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -28,6 +29,7 @@ public class MyC45 extends Classifier {
 
     public void buildClassifier(Instances data) throws Exception {
         data = discretizeData(data);
+        data = replaceMissingValues(data);
     }
 
     private Instances discretizeData(Instances data) throws Exception {
@@ -39,6 +41,16 @@ public class MyC45 extends Classifier {
         discreteData = Filter.useFilter(data, filter);
 
         return discreteData;
+    }
+
+    private Instances replaceMissingValues(Instances data) throws Exception {
+        Instances replacedData;
+        ReplaceMissingValues filter = new ReplaceMissingValues();
+
+        filter.setInputFormat(data);
+        replacedData = Filter.useFilter(data, filter);
+
+        return replacedData;
     }
 
     private MyNode makeTree (Instances data, int i){
@@ -114,6 +126,7 @@ public class MyC45 extends Classifier {
 
     public void test(Instances data) throws Exception {
         data = discretizeData(data);
+        data = replaceMissingValues(data);
 
         Attribute attribute;
         Attribute classAttribute = data.attribute(data.numAttributes()-1);
@@ -142,7 +155,7 @@ public class MyC45 extends Classifier {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/weather.nominal.arff";
+        String fileName = "data/weather.numeric.arff";
         Instances data;
         try (BufferedReader br = new BufferedReader(
                 new FileReader(fileName))) {
