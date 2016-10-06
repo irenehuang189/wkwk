@@ -104,16 +104,16 @@ public class MyEvaluation {
             //System.out.println(Arrays.toString(eval.getActualClass().toArray()));
 
             MyC45 tree = new MyC45();
-            MyNode node = new MyNode("outlook");
-            node.addChild("sunny", new MyNode("humidity"));
-            node.addChild("overcast", new MyNode("yes"));
-            node.addChild("rainy", new MyNode("windy"));
+            MyNode node = new MyNode("outlook", 0);
+            node.addChild("sunny", new MyNode("humidity", 1, node));
+            node.addChild("overcast", new MyNode("yes", 1, node));
+            node.addChild("rainy", new MyNode("windy", 1, node));
             MyNode child = node.getChild("sunny");
-            child.addChild("high", new MyNode("no"));
-            child.addChild("normal", new MyNode("yes"));
+            child.addChild("high", new MyNode("no", 2, child));
+            child.addChild("normal", new MyNode("yes", 2, child));
             child = node.getChild("rainy");
-            child.addChild("TRUE", new MyNode("no"));
-            child.addChild("FALSE", new MyNode("yes"));
+            child.addChild("TRUE", new MyNode("no", 2, child));
+            child.addChild("FALSE", new MyNode("yes", 2, child));
             //node.print("", "");
 
             tree.setRoot(node);

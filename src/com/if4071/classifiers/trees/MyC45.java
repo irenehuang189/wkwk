@@ -124,6 +124,14 @@ public class MyC45 extends Classifier {
         return attributeValuesOccurrence;
     }
 
+    private float countPreSplitError(int numWrongInstances, int numInstances) {
+        return (numWrongInstances + 0.5f) / numInstances;
+    }
+
+    private float countPostSplitError(int numLeaves, int numWrongInstances, int numInstances) {
+        return (numWrongInstances + 0.5f * numLeaves) / numInstances;
+    }
+
     public void test(Instances data) throws Exception {
         data = discretizeData(data);
         data = replaceMissingValues(data);
