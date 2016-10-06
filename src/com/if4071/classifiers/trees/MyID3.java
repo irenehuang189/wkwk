@@ -29,8 +29,6 @@ public class MyID3 {
 
     public void buildClassifier() {
         occurrences = countAttributeValuesOccurrence(data);
-        String attributeRoot = getAttributeRoot();
-        tree.setLabel(attributeRoot);
     }
 
     private void makeTree(Instances data, int level) {
@@ -47,18 +45,23 @@ public class MyID3 {
                 }
             }
 
-//            if(maxInfoGain == 0) {
+            if(maxInfoGain == 0) {
                 // Create leaf
-                int i=0;
-                while(i < data.numInstances()) {
-                    System.out.println(data.instance(i).stringValue(data.classIndex()));
-                    i++;
-                }
-                MyNode leaf = new MyNode("Yes", level, tree);
+//                int i=0;
+                // Get every instances class value
+//                while(i < data.numInstances()) {
+//                    System.out.println(data.instance(i).stringValue(data.classIndex()));
+//                    i++;
+//                }
+                MyNode leaf = new MyNode(data.instance(0).stringValue(data.classIndex()), level, tree);
                 tree.addChild(rootAttribute, leaf);
-//            } else {
-//                Map<String, Instances> splitData = getSplitData(data, rootAttribute);
-//            }
+            } else {
+                Map<String, Instances> splitData = getSplitData(data, rootAttribute);
+                for(Map.Entry<String, Instances> subTree: splitData.entrySet()) {
+                    tree.addChild(subTree.getKey(), null);
+                    makeTree(subTree.getValue(), level+1);
+                }
+            }
         }
     }
 
@@ -71,16 +74,23 @@ public class MyID3 {
             splitData.put(attribute.value(i), new Instances(unsplitData, unsplitData.numInstances()));
         }
 
+        // Classify instances to its attribute value group
         for(int i=0; i<unsplitData.numInstances(); i++) {
             Instance instance = unsplitData.instance(i);
             String attributeValue = instance.stringValue(attribute);
             splitData.get(attributeValue).add(instance);
         }
 
-//        for(Map.Entry<String, Instances> i: splitData.entrySet()) {
-//            System.out.println(i.getKey());
-//            System.out.println(i.getValue());
-//        }
+        // Delete attribute value group with no instances
+        ArrayList<String> deletedKeys = new ArrayList<>();
+        for(Map.Entry<String, Instances> subData: splitData.entrySet()) {
+            if (subData.getValue().numInstances() == 0) {
+                deletedKeys.add(subData.getKey());
+            }
+        }
+        for (String key: deletedKeys) {
+            splitData.remove(key);
+        }
         return splitData;
     }
 
@@ -260,9 +270,10 @@ public class MyID3 {
 //                System.out.println(key + " " + value);
 //            }
 //            System.out.println(myID3.countEntropy("deadline", "urgent"));
-            myID3.makeTree(data, 0);
-//            Map<String, Instances> data2 = myID3.getSplitData(data, "deadline");
-//            double infoGain = myID3.countEntropyTotal(data2) - myID3.countRemainder(data2, "deadline");
+//            myID3.makeTree(data, 0);
+            Map<String, Instances> data2 = myID3.getSplitData(data, "deadline");
+//            double infoGain = myID3.countEntropyTotal(data2.get(1)) - myID3.countRemainder(data2.get(1), "deadline");
+//            System.out.println(infoGain);
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
