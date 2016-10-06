@@ -7,11 +7,12 @@ import java.util.Map;
  * Created by angelynz95 on 04-Oct-16.
  */
 public class MyNode {
-    private Map<String, MyNode> children = new LinkedHashMap<>();
+    private Map<String, MyNode> children;
     private String label;
 
     public MyNode() {
-
+        children = new LinkedHashMap<>();
+        label = "";
     }
 
     public MyNode(String label) {

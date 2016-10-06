@@ -1,0 +1,18 @@
+@relation mahasiswa
+
+@attribute deadline {urgent, dekat, tidak}
+@attribute hangout {ya, tidak}
+@attribute malas {ya, tidak}
+@attribute aktivitas {kumpul, belajar, jalan, nonton}
+
+@data
+urgent,ya,ya,kumpul
+urgent,tidak,ya,belajar
+dekat,ya,ya,kumpul
+tidak,ya,tidak,kumpul
+tidak,tidak,ya,jalan
+tidak,ya,tidak,kumpul
+dekat,tidak,tidak,belajar
+dekat,tidak,ya,nonton
+dekat,ya,ya,kumpul
+urgent,tidak,tidak,belajar
