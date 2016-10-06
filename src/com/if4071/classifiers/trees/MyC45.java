@@ -20,6 +20,8 @@ import java.util.Map;
  * Created by angelynz95 on 05-Oct-16.
  */
 public class MyC45 extends Classifier {
+    private MyNode root;
+
     public MyC45() {
 
     }
@@ -37,6 +39,40 @@ public class MyC45 extends Classifier {
         discreteData = Filter.useFilter(data, filter);
 
         return discreteData;
+    }
+
+    private MyNode makeTree (Instances data, int i){
+        MyNode node;
+        /*
+        kalau data kosong
+        if (data.numInstances() == 0){
+            node = new MyNode ("null");
+            return node;
+        }
+        /*
+        double[] infoGains = new double[data.numAttributes()];
+        Enumeration attEnum = data.enumerateAttributes();
+        while (attEnum.hasMoreElements())
+        {
+            Attribute att = (Attribute)attEnum.nextElement();
+            infoGains[att.index()] = computeInfoGain(data, att);
+        }
+             */
+
+        //i = angka asal cuma buat test
+        if (i!=0){
+            node = new MyNode(Integer.toString(i));
+            node.addChild("1", makeTree(data, i-1));
+            node.addChild("2", makeTree(data, 0));
+        }
+        else {
+            node = new MyNode("leaf");
+        }
+        return node;
+    }
+
+    private double computeInfoGain(Instances data, Attribute att){
+        return 0;
     }
 
     private Map<String, Map<String, Map<String, Integer>>> countAttributeValuesOccurrence(Instances data) {
@@ -97,15 +133,24 @@ public class MyC45 extends Classifier {
         }
     }
 
+    public MyNode getRoot() {
+        return root;
+    }
+
+    public void setRoot(MyNode root) {
+        this.root = root;
+    }
+
     public static void main(String[] args) {
         String fileName = "data/weather.nominal.arff";
-        try {
-            BufferedReader br = new BufferedReader(new FileReader(fileName));
-            ArffReader arffReader = new ArffReader(br);
+        Instances data;
+        try (BufferedReader br = new BufferedReader(
+                new FileReader(fileName))) {
+            ArffReader arff = new ArffReader(br);
+            data = arff.getData();
+            data.setClassIndex(data.numAttributes() - 1);
 
             MyC45 myC45 = new MyC45();
-            Instances data = arffReader.getData();
-            data.setClassIndex(data.numAttributes()-1);
             myC45.test(data);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
