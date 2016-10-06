@@ -1,7 +1,6 @@
 package com.if4071.classifiers.trees;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by angelynz95 on 04-Oct-16.
@@ -66,6 +65,20 @@ public class MyNode {
         children.put(attributeValue, child);
     }
 
+    public void removeAllChildren() {
+        children.clear();
+    }
+
+    public boolean isParentChildrenLeaf() {
+        List<MyNode> parentChildren = new ArrayList<>(parent.getChildren().values());
+        for (int i = 0; i < parentChildren.size(); i++) {
+            if (!parentChildren.get(i).isLeaf()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     public boolean isRoot() {
         return parent == null;
     }
@@ -82,16 +95,16 @@ public class MyNode {
     }
 
     public static void main(String[] args) {
-//        MyNode node = new MyNode("Outlook");
-//        node.addChild("Sunny", new MyNode("Humidity"));
-//        node.addChild("Overcast", new MyNode("Yes"));
-//        node.addChild("Rain", new MyNode("Wind"));
-//        MyNode child = node.getChild("Sunny");
-//        child.addChild("High", new MyNode("No"));
-//        child.addChild("Normal", new MyNode("Yes"));
-//        child = node.getChild("Rain");
-//        child.addChild("Strong", new MyNode("No"));
-//        child.addChild("Weak", new MyNode("Yes"));
-//        node.print("", "");
+        MyNode node = new MyNode("Outlook", 0);
+        node.addChild("Sunny", new MyNode("Humidity", 1, node));
+        node.addChild("Overcast", new MyNode("Yes", 1, node));
+        node.addChild("Rain", new MyNode("Wind", 1, node));
+        MyNode child = node.getChild("Sunny");
+        child.addChild("High", new MyNode("No", 2, child));
+        child.addChild("Normal", new MyNode("Yes", 2, child));
+        child = node.getChild("Rain");
+        child.addChild("Strong", new MyNode("No", 2, child));
+        child.addChild("Weak", new MyNode("Yes", 2, child));
+        node.print("", "");
     }
 }

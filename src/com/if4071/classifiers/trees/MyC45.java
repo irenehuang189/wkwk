@@ -54,7 +54,7 @@ public class MyC45 extends Classifier {
     }
 
     private MyNode makeTree (Instances data, int i){
-        MyNode node;
+        MyNode node = new MyNode("root", 0);
         /*
         kalau data kosong
         if (data.numInstances() == 0){
@@ -72,14 +72,14 @@ public class MyC45 extends Classifier {
              */
 
         //i = angka asal cuma buat test
-        if (i!=0){
-            node = new MyNode(Integer.toString(i));
-            node.addChild("1", makeTree(data, i-1));
-            node.addChild("2", makeTree(data, 0));
-        }
-        else {
-            node = new MyNode("leaf");
-        }
+//        if (i!=0){
+//            node = new MyNode(Integer.toString(i));
+//            node.addChild("1", makeTree(data, i-1));
+//            node.addChild("2", makeTree(data, 0));
+//        }
+//        else {
+//            node = new MyNode("leaf");
+//        }
         return node;
     }
 
