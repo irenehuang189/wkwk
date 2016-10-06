@@ -13,15 +13,14 @@ import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by angelynz95 on 05-Oct-16.
  */
 public class MyC45 extends Classifier {
     private MyNode root;
+    private ArrayList<MyNode> prunableLeaf = new ArrayList<>();
 
     public MyC45() {
 
@@ -154,6 +153,55 @@ public class MyC45 extends Classifier {
         }
     }
 
+    private void pruneTree(){
+        int lowestLevel = getLowestLevel();
+        while ((lowestLevel >= 0) && !prunableLeaf.isEmpty()){
+            ArrayList<MyNode> lowestLeaf = getLowestLeaf(lowestLevel);
+            pruneLowestLeaf(lowestLeaf);
+            lowestLevel--;
+        }
+    }
+
+    private int getLowestLevel(){
+        int lowestLevel = getPrunableLeaf().get(0).getLevel();
+        for (MyNode leaf: getPrunableLeaf()){
+            if (leaf.getLevel() < lowestLevel) {
+                lowestLevel = leaf.getLevel();
+            }
+        }
+        return  lowestLevel;
+    }
+
+    private ArrayList<MyNode> getLowestLeaf(int level){
+        ArrayList<MyNode> lowestLeaf = new ArrayList<>();
+        for (MyNode leaf: getPrunableLeaf()) {
+            if (leaf.getLevel() == level){
+                lowestLeaf.add(leaf);
+            }
+        }
+        return lowestLeaf;
+    }
+
+    private void pruneLowestLeaf(ArrayList<MyNode> lowestLeaf){
+        for (MyNode leaf: getPrunableLeaf()) {
+            //check if all neighbors are leaves, if true check, else delete from prunableleaf
+                //check if prune, if true then add parent to prunableleaf and delete self and neighbors from prunableleaf and from tree
+                //else if not prune delete self from prunableleaf
+            /* if (leaf.neighborAreLeaves){
+
+            }
+            else {
+                prunableLeaf.remove(leaf);
+            }
+             */
+
+        }
+    }
+
+    private void checkPrunableLeafs(){
+
+    }
+
     public MyNode getRoot() {
         return root;
     }
@@ -172,7 +220,10 @@ public class MyC45 extends Classifier {
             data.setClassIndex(data.numAttributes() - 1);
 
             MyC45 myC45 = new MyC45();
-            myC45.test(data);
+            //myC45.test(data);
+            myC45.buildClassifier(data);
+            System.out.println(Arrays.toString(myC45.getPrunableLeaf().toArray()));
+            myC45.getRoot().print("","");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -180,5 +231,13 @@ public class MyC45 extends Classifier {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public ArrayList<MyNode> getPrunableLeaf() {
+        return prunableLeaf;
+    }
+
+    public void setPrunableLeaf(ArrayList<MyNode> prunableLeaf) {
+        this.prunableLeaf = prunableLeaf;
     }
 }
