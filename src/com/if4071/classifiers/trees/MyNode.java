@@ -82,16 +82,16 @@ public class MyNode {
     }
 
     public static void main(String[] args) {
-        MyNode node = new MyNode("Outlook");
-        node.addChild("Sunny", new MyNode("Humidity"));
-        node.addChild("Overcast", new MyNode("Yes"));
-        node.addChild("Rain", new MyNode("Wind"));
-        MyNode child = node.getChild("Sunny");
-        child.addChild("High", new MyNode("No"));
-        child.addChild("Normal", new MyNode("Yes"));
-        child = node.getChild("Rain");
-        child.addChild("Strong", new MyNode("No"));
-        child.addChild("Weak", new MyNode("Yes"));
-        node.print("", "");
+//        MyNode node = new MyNode("Outlook");
+//        node.addChild("Sunny", new MyNode("Humidity"));
+//        node.addChild("Overcast", new MyNode("Yes"));
+//        node.addChild("Rain", new MyNode("Wind"));
+//        MyNode child = node.getChild("Sunny");
+//        child.addChild("High", new MyNode("No"));
+//        child.addChild("Normal", new MyNode("Yes"));
+//        child = node.getChild("Rain");
+//        child.addChild("Strong", new MyNode("No"));
+//        child.addChild("Weak", new MyNode("Yes"));
+//        node.print("", "");
     }
 }
