@@ -16,7 +16,7 @@ public class MyNode {
         this.level = level;
         this.children = new LinkedHashMap<>();
         this.parent = null;
-        this.label = "";
+        this.label = label;
     }
 
     public MyNode(String label, int level, MyNode parent) {

@@ -1,6 +1,5 @@
 package com.if4071.classifiers.trees;
 
-import org.w3c.dom.Attr;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -16,12 +15,12 @@ import java.util.*;
  * Created by irn on 05/10/2016.
  */
 public class MyID3 {
-    private ArrayList<MyNode> tree;
+    private MyNode tree;
     private Map<String, Map<String, Map<String, Integer>>> occurrences;
     private Instances data;
 
     public MyID3() {
-        tree = new ArrayList<>();
+        tree = new MyNode("", 0);
     }
 
     public void setData(Instances data) {
@@ -31,28 +30,66 @@ public class MyID3 {
     public void buildClassifier() {
         occurrences = countAttributeValuesOccurrence(data);
         String attributeRoot = getAttributeRoot();
-        MyNode node = new MyNode(attributeRoot);
-
+        tree.setLabel(attributeRoot);
     }
 
-    private void makeTree() {
+    private void makeTree(Instances data, int level) {
         if(data.numInstances() != 0) {
+            // Get root attribute
+            String rootAttribute = "";
+            double maxInfoGain = -999;
+            for(int i=0; i<data.numAttributes()-1; i++) {
+                String attribute = data.attribute(i).name();
+                double infoGain = countEntropyTotal(data) - countRemainder(data, attribute);
+                if(infoGain > maxInfoGain) {
+                    maxInfoGain = infoGain;
+                    rootAttribute = attribute;
+                }
+            }
 
+//            if(maxInfoGain == 0) {
+                // Create leaf
+                int i=0;
+                while(i < data.numInstances()) {
+                    System.out.println(data.instance(i).stringValue(data.classIndex()));
+                    i++;
+                }
+                MyNode leaf = new MyNode("Yes", level, tree);
+                tree.addChild(rootAttribute, leaf);
+//            } else {
+//                Map<String, Instances> splitData = getSplitData(data, rootAttribute);
+//            }
         }
     }
 
-//    private Instances getSplittedData(Instances unsplitedData) {
-//        for(int i=0; i<unsplitedData.numAttributes(); i++) {
-//
+    private Map<String, Instances> getSplitData(Instances unsplitData, String attributeName) {
+        Map<String, Instances> splitData = new HashMap<>();
+        Attribute attribute = unsplitData.attribute(attributeName);
+
+        // Initialize array of split data
+        for(int i=0; i<attribute.numValues(); i++) {
+            splitData.put(attribute.value(i), new Instances(unsplitData, unsplitData.numInstances()));
+        }
+
+        for(int i=0; i<unsplitData.numInstances(); i++) {
+            Instance instance = unsplitData.instance(i);
+            String attributeValue = instance.stringValue(attribute);
+            splitData.get(attributeValue).add(instance);
+        }
+
+//        for(Map.Entry<String, Instances> i: splitData.entrySet()) {
+//            System.out.println(i.getKey());
+//            System.out.println(i.getValue());
 //        }
-//    }
+        return splitData;
+    }
 
     private String getAttributeRoot() {
         String rootAttribute = "";
-        double maxInfoGain = 0;
+        double maxInfoGain = -999;
         for(int i=0; i<data.numAttributes()-1; i++) {
             String attribute = data.attribute(i).name();
-            double infoGain = countEntropyTotal() - countRemainder(attribute);
+            double infoGain = countEntropyTotal(data) - countRemainder(data, attribute);
             if(infoGain > maxInfoGain) {
                 maxInfoGain = infoGain;
                 rootAttribute = attribute;
@@ -61,8 +98,8 @@ public class MyID3 {
         return rootAttribute;
     }
 
-    private double countEntropyTotal() {
-        Map<String, Integer> classOccurrences = getClassOccurrences();
+    private double countEntropyTotal(Instances data) {
+        Map<String, Integer> classOccurrences = getClassOccurrences(data);
         int occurrencesSum = data.numInstances();
         double entropy = 0;
 
@@ -77,17 +114,17 @@ public class MyID3 {
         return entropy;
     }
 
-    private double countRemainder(String attribute) {
+    private double countRemainder(Instances data, String attribute) {
         double remainder = 0;
         for(int i=0; i<data.attribute(attribute).numValues(); i++) {
             String attributeValue = data.attribute(attribute).value(i);
-            double subRemainder = countAttributeOccurrences(attribute, attributeValue) / (double)data.numInstances() * countEntropy(attribute, attributeValue);
+            double subRemainder = countAttributeOccurrences(data, attribute, attributeValue) / (double)data.numInstances() * countEntropy(data, attribute, attributeValue);
             remainder += subRemainder;
         }
         return remainder;
     }
 
-    private int countAttributeOccurrences(String attribute, String instance) {
+    private int countAttributeOccurrences(Instances data, String attribute, String instance) {
         int occurrencesSum = 0;
         Map<String, Integer> classMap = occurrences.get(attribute).get(instance);
         for (int value : classMap.values()) {
@@ -96,7 +133,7 @@ public class MyID3 {
         return occurrencesSum;
     }
 
-    private double countEntropy(String attribute, String attributeValue) {
+    private double countEntropy(Instances data, String attribute, String attributeValue) {
         Attribute classAttribute = data.classAttribute();
 
         int occurrencesSum = 0;
@@ -118,7 +155,7 @@ public class MyID3 {
         return entropy;
     }
 
-    private Map<String, Integer> getClassOccurrences() {
+    private Map<String, Integer> getClassOccurrences(Instances data) {
         Map<String, Integer> classOccurrences = new HashMap<>();
         // Initialize map with class values
         for(int i=0; i<data.numClasses(); i++) {
@@ -223,6 +260,10 @@ public class MyID3 {
 //                System.out.println(key + " " + value);
 //            }
 //            System.out.println(myID3.countEntropy("deadline", "urgent"));
+            myID3.makeTree(data, 0);
+//            Map<String, Instances> data2 = myID3.getSplitData(data, "deadline");
+//            double infoGain = myID3.countEntropyTotal(data2) - myID3.countRemainder(data2, "deadline");
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
