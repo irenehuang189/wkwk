@@ -5,6 +5,8 @@ import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffLoader.ArffReader;
+import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Discretize;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
@@ -22,51 +24,64 @@ public class MyC45 extends Classifier {
 
     }
 
-    public void buildClassifier(Instances data) {
-
-
+    public void buildClassifier(Instances data) throws Exception {
+        data = discretizeData(data);
     }
 
-    private Map<Attribute, Map<String, Map<String, Integer>>> countAttributeValuesOccurence(Instances data, Attribute classAttribute) {
-        Map<Attribute, Map<String, Map<String, Integer>>> attributeValuesOccurence = new HashMap<>();
+    private Instances discretizeData(Instances data) throws Exception {
+        Instances discreteData;
+        Discretize filter = new Discretize();
+
+        filter.setInputFormat(data);
+        filter.setBins(2);
+        discreteData = Filter.useFilter(data, filter);
+
+        return discreteData;
+    }
+
+    private Map<String, Map<String, Map<String, Integer>>> countAttributeValuesOccurrence(Instances data) {
+        Map<String, Map<String, Map<String, Integer>>> attributeValuesOccurrence = new HashMap<>();
         Enumeration attributes = data.enumerateAttributes();
         Enumeration attributeValues;
         Enumeration instances = data.enumerateInstances();
         Attribute attribute;
+        Attribute classAttribute = data.classAttribute();
         String attributeValue;
         Instance instance;
         int count;
 
         while (attributes.hasMoreElements()) {
             attribute = (Attribute) attributes.nextElement();
-            attributeValuesOccurence.put(attribute, new HashMap<>());
+            attributeValuesOccurrence.put(attribute.name(), new HashMap<>());
             attributeValues = attribute.enumerateValues();
             while (attributeValues.hasMoreElements()) {
                 attributeValue = attributeValues.nextElement().toString();
-                attributeValuesOccurence.get(attribute).put(attributeValue, new HashMap<>());
+                attributeValuesOccurrence.get(attribute.name()).put(attributeValue, new HashMap<>());
                 for (int i = 0; i < classAttribute.numValues(); i++) {
-                    attributeValuesOccurence.get(attribute).get(attributeValue).put(classAttribute.value(i), 0);
+                    attributeValuesOccurrence.get(attribute.name()).get(attributeValue).put(classAttribute.value(i), 0);
                 }
             }
         }
 
         while (instances.hasMoreElements()) {
             instance = (Instance) instances.nextElement();
-            for (int i = 0; i < instance.numAttributes(); i++) {
+            for (int i = 0; i < instance.numAttributes()-1; i++) {
                 attribute = instance.attribute(i);
-                count = attributeValuesOccurence.get(attribute).get(instance.stringValue(attribute)).get(instance.stringValue(classAttribute));
+                count = attributeValuesOccurrence.get(attribute.name()).get(instance.stringValue(attribute)).get(instance.stringValue(classAttribute));
                 count++;
-                attributeValuesOccurence.get(attribute).get(instance.stringValue(attribute)).put(instance.stringValue(classAttribute), count);
+                attributeValuesOccurrence.get(attribute.name()).get(instance.stringValue(attribute)).put(instance.stringValue(classAttribute), count);
             }
         }
 
-        return attributeValuesOccurence;
+        return attributeValuesOccurrence;
     }
 
-    public void testCountAttributeValuesOccurence(Instances data) {
+    public void test(Instances data) throws Exception {
+        data = discretizeData(data);
+
         Attribute attribute;
         Attribute classAttribute = data.attribute(data.numAttributes()-1);
-        Map<Attribute, Map<String, Map<String, Integer>>> attributeValuesOccurence = countAttributeValuesOccurence(data, classAttribute);
+        Map<String, Map<String, Map<String, Integer>>> attributeValuesOccurrence = countAttributeValuesOccurrence(data);
         Enumeration attributes = data.enumerateAttributes();
 
         while (attributes.hasMoreElements()) {
@@ -75,7 +90,7 @@ public class MyC45 extends Classifier {
             for (int i = 0; i < classAttribute.numValues(); i++) {
                 System.out.println(classAttribute.name() + " " + classAttribute.value(i));
                 for (int j = 0; j < attribute.numValues(); j++) {
-                    System.out.println("\t" + attribute.value(j) + " " + attributeValuesOccurence.get(attribute).get(attribute.value(j)).get(classAttribute.value(i)));
+                    System.out.println("\t" + attribute.value(j) + " " + attributeValuesOccurrence.get(attribute.name()).get(attribute.value(j)).get(classAttribute.value(i)));
                 }
             }
             System.out.println();
@@ -89,10 +104,14 @@ public class MyC45 extends Classifier {
             ArffReader arffReader = new ArffReader(br);
 
             MyC45 myC45 = new MyC45();
-            myC45.testCountAttributeValuesOccurence(arffReader.getData());
+            Instances data = arffReader.getData();
+            data.setClassIndex(data.numAttributes()-1);
+            myC45.test(data);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
