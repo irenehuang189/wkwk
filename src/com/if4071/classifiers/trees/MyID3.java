@@ -29,18 +29,36 @@ public class MyID3 {
     }
 
     public void buildClassifier() {
+        occurrences = countAttributeValuesOccurrence(data);
+        String attributeRoot = getAttributeRoot();
+        MyNode node = new MyNode(attributeRoot);
+
+    }
+
+    private void makeTree() {
+        if(data.numInstances() != 0) {
+
+        }
+    }
+
+//    private Instances getSplittedData(Instances unsplitedData) {
+//        for(int i=0; i<unsplitedData.numAttributes(); i++) {
+//
+//        }
+//    }
+
+    private String getAttributeRoot() {
         String rootAttribute = "";
         double maxInfoGain = 0;
-        occurrences = countAttributeValuesOccurrence(data);
         for(int i=0; i<data.numAttributes()-1; i++) {
             String attribute = data.attribute(i).name();
             double infoGain = countEntropyTotal() - countRemainder(attribute);
-            System.out.println(infoGain);
             if(infoGain > maxInfoGain) {
                 maxInfoGain = infoGain;
                 rootAttribute = attribute;
             }
         }
+        return rootAttribute;
     }
 
     private double countEntropyTotal() {
@@ -194,7 +212,6 @@ public class MyID3 {
             MyID3 myID3 = new MyID3();
             myID3.setData(data);
             myID3.buildClassifier();
-//            System.out.println(myID3.countEntropyTotal());
 
             // Print class occurrences
 //            Map<String, Integer> tes = myID3.getClassOccurrences();

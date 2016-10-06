@@ -11,11 +11,12 @@ public class MyNode {
     private String label;
 
     public MyNode() {
-        children = new LinkedHashMap<>();
-        label = "";
+        this.children = new LinkedHashMap<>();
+        this.label = "";
     }
 
     public MyNode(String label) {
+        this.children = new LinkedHashMap<>();
         this.label = label;
     }
 
