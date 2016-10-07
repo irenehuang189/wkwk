@@ -292,7 +292,7 @@ public class MyC45 extends MyID3 {
                         }
 
                     } else {
-                        System.out.println(leaf.getLabel() + "not prune");
+                        System.out.println(leaf.getLabel() + "- not prune");
                         prunableLeaf.remove(leaf);
                     }
                 } catch (Exception e) {
@@ -306,10 +306,6 @@ public class MyC45 extends MyID3 {
     }
 
 
-    private void checkPrunableLeafs(){
-
-    }
-
     public MyNode getRoot() {
         return root;
     }
@@ -319,7 +315,7 @@ public class MyC45 extends MyID3 {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/weather.nominal.arff";
+        String fileName = "data/iris.arff";
         Instances data;
         try (BufferedReader br = new BufferedReader(
                 new FileReader(fileName))) {
