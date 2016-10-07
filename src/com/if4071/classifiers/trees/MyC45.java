@@ -30,13 +30,16 @@ public class MyC45 extends MyID3 {
         data = discretizeData(data);
         data = replaceMissingValues(data);
         super.buildClassifier(data);
+        MyEvaluation eval = new MyEvaluation(data);
+        eval.evaluateModel(this,data,4);
         inputLeaf(tree);
         System.out.println("Prunable Leaf: " + prunableLeaf.size());
         pruneTree();
+        tree.print("","");
     }
 
     public void inputLeaf(MyNode root){
-        if (root.isLeaf()){
+        if (root.isLeaf() && !root.isRoot()){
             prunableLeaf.add(root);
         }
         else {
@@ -118,18 +121,18 @@ public class MyC45 extends MyID3 {
         myEvaluation = new MyEvaluation();
         myEvaluation.evaluateModel(this, data,4);
         numIncorrectInstances = myEvaluation.getIncorrectInstances();
-        System.out.println("Num Incorrect Instances " + numIncorrectInstances);
+        //System.out.println("Num Incorrect Instances " + numIncorrectInstances);
         numInstances = myEvaluation.getTotalInstances();
-        System.out.println("Num Instances " + numInstances);
+        //System.out.println("Num Instances " + numInstances);
         preSplitError = countPreSplitError(numIncorrectInstances, numInstances);
 
         this.root = parentNode;
         myEvaluation = new MyEvaluation();
         myEvaluation.evaluateModel(this, data,4);
         numIncorrectInstances = myEvaluation.getIncorrectInstances();
-        System.out.println("Num Incorrect Instances " + numIncorrectInstances);
+        //System.out.println("Num Incorrect Instances " + numIncorrectInstances);
         numInstances = myEvaluation.getTotalInstances();
-        System.out.println("Num Instances " + numInstances);
+        //System.out.println("Num Instances " + numInstances);
         numLeaves = this.root.numChildren();
         postSplitError = countPostSplitError(numLeaves, numIncorrectInstances, numInstances);
 
@@ -240,7 +243,7 @@ public class MyC45 extends MyID3 {
         int lowestLevel = getLowestLevel();
         while ((lowestLevel >= 0) && !prunableLeaf.isEmpty()){
             System.out.println("Level: " + lowestLevel);
-            ArrayList<MyNode> lowestLeaf = getLowestLeaf(lowestLevel);
+            ArrayList<MyNode> lowestLeaf = new ArrayList<>(getLowestLeaf(lowestLevel));
             pruneLowestLeaf(lowestLeaf);
             lowestLevel--;
             System.out.println("Prunable: " + prunableLeaf.size());
@@ -278,22 +281,34 @@ public class MyC45 extends MyID3 {
         //check if all neighbors are leaves, if true check, else delete from prunableleaf
 //check if prune, if true then add parent to prunableleaf and delete self and neighbors from prunableleaf and from tree
 //else if not prune delete self from prunableleaf
+
+        ArrayList<MyNode> checked = new ArrayList<>();
         lowestLeaf.stream().filter(leaf -> getPrunableLeaf().contains(leaf)).forEach(leaf -> {
-            if (leaf.isParentChildrenLeaf()) {
+            if (leaf.isParentChildrenLeaf() && !leaf.isRoot()) {
                 try {
-                    if (isPruned(leaf.getParent())){
-                        prunableLeaf.add(leaf.getParent());
-                        for (MyNode prunedLeaf : leaf.getParent().getChildren().values()) {
-                            System.out.print("Pruning: " + prunedLeaf.getLabel());
-                            prunableLeaf.remove(prunedLeaf);
-                            if (!prunableLeaf.contains(prunedLeaf)){
-                                System.out.println(" succeed!");
+                    MyNode parent = leaf.getParent();
+                    Collection<MyNode> children = parent.getChildren().values();
+
+                    System.out.println("Children size: " + children.size());
+                    if (!checked.contains(parent)){
+                        if (isPruned(parent)){
+                            System.out.println(parent.getLabel() + " prune!!");
+                            prunableLeaf.add(parent);
+                            System.out.println("Children size: " + children.size());
+                            for (MyNode prunedLeaf : children) {
+                                System.out.print("Pruning: " + prunedLeaf.getLabel());
+                                prunableLeaf.remove(prunedLeaf);
+                                if (!prunableLeaf.contains(prunedLeaf)){
+                                    System.out.println(" succeed!");
+                                }
                             }
+
+                        } else {
+                            System.out.println(leaf.getLabel() + "- not prune");
+                            prunableLeaf.remove(leaf);
                         }
 
-                    } else {
-                        System.out.println(leaf.getLabel() + "- not prune");
-                        prunableLeaf.remove(leaf);
+                        checked.add(parent);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -315,7 +330,7 @@ public class MyC45 extends MyID3 {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/iris.arff";
+        String fileName = "data/weather.nominal.arff";
         Instances data;
         try (BufferedReader br = new BufferedReader(
                 new FileReader(fileName))) {
@@ -326,9 +341,12 @@ public class MyC45 extends MyID3 {
             MyC45 myC45 = new MyC45();
             myC45.setData(data);
             myC45.buildClassifier();
-//            myC45.buildClassifier(data);
-//            System.out.println(Arrays.toString(myC45.getPrunableLeaf().toArray()));
-//            myC45.getRoot().print("","");
+
+            MyEvaluation eval = new MyEvaluation();
+            eval.evaluateModel(myC45, data, 4);
+
+            eval.crossValidation(myC45, data, 4);
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

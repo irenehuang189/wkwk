@@ -24,6 +24,15 @@ public class MyEvaluation {
     private int incorrectInstances = 0;
     private int totalInstances = 0;
 
+    public MyEvaluation(Instances data){
+        setTotalInstances(data.numInstances());
+    }
+
+    public MyEvaluation(){
+
+    }
+
+
     public void crossValidation(MyID3 tree, Instances data, int treeOpt) throws Exception {
         correctInstances = 0;
         //divide into 10
@@ -52,13 +61,28 @@ public class MyEvaluation {
             for (int j=startIndex.get(i); j < startIndex.get(i+1); j++){
                 trainingSet.delete(j);
             }
+            if (treeOpt == 3) {
+                MyID3 newtree = new MyID3();
+                newtree.buildClassifier(trainingSet);
+                getActualClass().clear();
+                getPredictedClass().clear();
+                evaluate(newtree, testSet, treeOpt);
 
-            MyID3 newtree = new MyID3();
-            newtree.buildClassifier(trainingSet);
 
-            getActualClass().clear();
-            getPredictedClass().clear();
-            evaluate(newtree,testSet,treeOpt);
+
+            }
+            else if (treeOpt == 4) {
+                MyC45 newtree = new MyC45();
+                newtree.buildClassifier(trainingSet);
+                getActualClass().clear();
+                getPredictedClass().clear();
+                evaluate(newtree, testSet, treeOpt);
+
+
+
+            }
+
+
             //showResult();
         }
 
@@ -72,7 +96,7 @@ public class MyEvaluation {
         showResult();
     }
 
-    private void evaluate(MyID3 tree, Instances data, int treeOpt) throws Exception {
+    public void evaluate(MyID3 tree, Instances data, int treeOpt) throws Exception {
         // if treeOpt = 3 then ID3, if 4  then C45
 
         inputActualClass(data);
@@ -90,7 +114,7 @@ public class MyEvaluation {
     }
 
     private String predictClass(Instance instance, MyC45 tree, Instances data) throws Exception {
-        MyNode node = tree.getRoot();
+        MyNode node = tree.getTree();
         String value;
         ReplaceMissingValues replace = new ReplaceMissingValues();
         replace.setInputFormat(data);
