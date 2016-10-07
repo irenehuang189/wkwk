@@ -1,5 +1,6 @@
 package com.if4071.classifiers.trees;
 
+import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -14,11 +15,11 @@ import java.util.*;
 /**
  * Created by irn on 05/10/2016.
  */
-public class MyID3 {
+public class MyID3 extends Classifier {
     protected MyNode tree;
-    protected Map<MyNode, Instances> nodeData;
     private Map<String, Map<String, Map<String, Integer>>> occurrences;
     protected Instances data;
+    protected Map<MyNode, Instances> nodeData;
 
     public MyID3() {
         tree = new MyNode("", 0);
@@ -29,7 +30,9 @@ public class MyID3 {
         this.data = data;
     }
 
-    public void buildClassifier() throws Exception {
+    @Override
+    public void buildClassifier(Instances data) throws Exception {
+        setData(data);
         makeTree(null, "", data);
         System.out.println("\nStruktur pohon: ");
         tree.print("", "");
@@ -278,8 +281,16 @@ public class MyID3 {
             data.setClassIndex(data.numAttributes() - 1);
 
             MyID3 myID3 = new MyID3();
-            myID3.setData(data);
-            myID3.buildClassifier();
+            myID3.buildClassifier(data);
+            MyEvaluation evaluation = new MyEvaluation();
+
+            System.out.println("Result\n-------");
+            evaluation.evaluateModel(myID3,data,3);
+
+
+            System.out.println("\n\n10-Fold\n-------");
+            evaluation.crossValidation(myID3,data,3);
+
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -287,5 +298,13 @@ public class MyID3 {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public MyNode getTree() {
+        return tree;
+    }
+
+    public void setTree(MyNode tree) {
+        this.tree = tree;
     }
 }
