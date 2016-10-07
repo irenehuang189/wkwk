@@ -30,6 +30,8 @@ public class MyC45 extends MyID3 {
         data = discretizeData(data);
         data = replaceMissingValues(data);
         super.buildClassifier();
+        prunableLeaf.add(tree);
+        System.out.println("Prunable Leaf " + prunableLeaf.size());
 //        MyNode node = tree;
 //        node = node.getChild("rainy");
 //        System.out.println("Prune" + isPruned(node));
