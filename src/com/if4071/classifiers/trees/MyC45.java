@@ -18,7 +18,7 @@ import java.util.*;
 /**
  * Created by angelynz95 on 05-Oct-16.
  */
-public class MyC45 extends Classifier {
+public class MyC45 extends MyID3 {
     private MyNode root;
     private ArrayList<MyNode> prunableLeaf = new ArrayList<>();
 
@@ -26,9 +26,13 @@ public class MyC45 extends Classifier {
 
     }
 
-    public void buildClassifier(Instances data) throws Exception {
+    public void buildClassifier() throws Exception {
         data = discretizeData(data);
         data = replaceMissingValues(data);
+        super.buildClassifier();
+//        MyNode node = tree;
+//        node = node.getChild("rainy");
+//        System.out.println("Prune" + isPruned(node));
     }
 
     private Instances discretizeData(Instances data) throws Exception {
@@ -123,34 +127,135 @@ public class MyC45 extends Classifier {
         return attributeValuesOccurrence;
     }
 
-    private float countPreSplitError(int numWrongInstances, int numInstances) {
-        return (numWrongInstances + 0.5f) / numInstances;
+    private boolean isPruned(MyNode parentNode) {
+        float preSplitError, postSplitError;
+        int numIncorrectInstances, numInstances, numLeaves;
+        MyEvaluation myEvaluation;
+        MyNode tempParentNode;
+        String prunedLabel = getMostOccurClassValue(data);
+
+        data = nodeData.get(parentNode);
+
+        tempParentNode = new MyNode(prunedLabel, 0);
+        this.root = tempParentNode;
+        myEvaluation = new MyEvaluation();
+        myEvaluation.evaluateModel(this, data);
+        numIncorrectInstances = myEvaluation.getIncorrectInstances();
+        System.out.println("Num Incorrect Instances " + numIncorrectInstances);
+        numInstances = myEvaluation.getTotalInstances();
+        System.out.println("Num Instances " + numInstances);
+        preSplitError = countPreSplitError(numIncorrectInstances, numInstances);
+
+        this.root = parentNode;
+        myEvaluation = new MyEvaluation();
+        myEvaluation.evaluateModel(this, data);
+        numIncorrectInstances = myEvaluation.getIncorrectInstances();
+        System.out.println("Num Incorrect Instances " + numIncorrectInstances);
+        numInstances = myEvaluation.getTotalInstances();
+        System.out.println("Num Instances " + numInstances);
+        numLeaves = this.root.numChildren();
+        postSplitError = countPostSplitError(numLeaves, numIncorrectInstances, numInstances);
+
+        System.out.println("Pre " + preSplitError);
+        System.out.println("Post " + postSplitError);
+        if (preSplitError <= postSplitError) {
+            this.root.removeAllChildren();
+            this.root.setLabel(prunedLabel);
+            return true;
+        }
+
+        return false;
     }
 
-    private float countPostSplitError(int numLeaves, int numWrongInstances, int numInstances) {
-        return (numWrongInstances + 0.5f * numLeaves) / numInstances;
+    private String getMostOccurClassValue(Instances data) {
+        Attribute classAttribute = data.classAttribute();
+        Enumeration instances = data.enumerateInstances();
+        Instance instance;
+        int count, max;
+        Map<String, Integer> classValuesOccurrence = new HashMap<>();
+        String classValue, mostOccurClassValue = "";
+
+        for (int i = 0; i < classAttribute.numValues(); i++) {
+            classValuesOccurrence.put(classAttribute.value(i), 0);
+        }
+
+        while (instances.hasMoreElements()) {
+            instance = (Instance) instances.nextElement();
+            classValue = instance.stringValue(classAttribute);
+            count = classValuesOccurrence.get(classValue);
+            count++;
+            classValuesOccurrence.put(classValue, count);
+        }
+
+        max = -1;
+        for (int i = 0; i < classAttribute.numValues(); i++) {
+            classValue = classAttribute.value(i);
+            count = classValuesOccurrence.get(classValue);
+            if (count > max) {
+                max = count;
+                mostOccurClassValue = classValue;
+            }
+        }
+
+        return mostOccurClassValue;
+    }
+
+    private float countPreSplitError(int numIncorrectInstances, int numInstances) {
+        return (numIncorrectInstances + 0.5f) / numInstances;
+    }
+
+    private float countPostSplitError(int numLeaves, int numIncorrectInstances, int numInstances) {
+        return (numIncorrectInstances + 0.5f * numLeaves) / numInstances;
     }
 
     public void test(Instances data) throws Exception {
         data = discretizeData(data);
         data = replaceMissingValues(data);
 
-        Attribute attribute;
-        Attribute classAttribute = data.attribute(data.numAttributes()-1);
-        Map<String, Map<String, Map<String, Integer>>> attributeValuesOccurrence = countAttributeValuesOccurrence(data);
-        Enumeration attributes = data.enumerateAttributes();
+        Map<MyNode, Instances> nodeData = new HashMap<>();
+        Map<String, Instances> splitData;
 
-        while (attributes.hasMoreElements()) {
-            attribute = (Attribute) attributes.nextElement();
-            System.out.println(attribute.name());
-            for (int i = 0; i < classAttribute.numValues(); i++) {
-                System.out.println(classAttribute.name() + " " + classAttribute.value(i));
-                for (int j = 0; j < attribute.numValues(); j++) {
-                    System.out.println("\t" + attribute.value(j) + " " + attributeValuesOccurrence.get(attribute.name()).get(attribute.value(j)).get(classAttribute.value(i)));
-                }
-            }
-            System.out.println();
-        }
+        MyNode node = new MyNode("outlook", 0);
+        splitData = this.getSplitData(data, node.getLabel());
+        node.addChild("sunny", new MyNode("humidity", 1, node));
+        nodeData.put(node.getChild("sunny"), splitData.get("sunny"));
+        node.addChild("overcast", new MyNode("yes", 1, node));
+        nodeData.put(node.getChild("overcast"), splitData.get("overcast"));
+        node.addChild("rainy", new MyNode("windy", 1, node));
+        nodeData.put(node.getChild("rainy"), splitData.get("rainy"));
+        MyNode child = node.getChild("sunny");
+        splitData = this.getSplitData(nodeData.get(child), child.getLabel());
+        child.addChild("high", new MyNode("no", 2, child));
+        nodeData.put(child.getChild("high"), splitData.get("high"));
+        child.addChild("normal", new MyNode("yes", 2, child));
+        nodeData.put(child.getChild("normal"), splitData.get("normal"));
+        child = node.getChild("rainy");
+        splitData = this.getSplitData(nodeData.get(child), child.getLabel());
+        child.addChild("TRUE", new MyNode("no", 2, child));
+        nodeData.put(node.getChild("TRUE"), splitData.get("TRUE"));
+        child.addChild("FALSE", new MyNode("yes", 2, child));
+        nodeData.put(node.getChild("FALSE"), splitData.get("FALSE"));
+
+//        System.out.println(isPruned(child, nodeData.get(child)));
+
+        node.print("", "");
+
+//        Attribute attribute;
+//        Attribute classAttribute = data.attribute(data.numAttributes()-1);
+//        Map<String, Map<String, Map<String, Integer>>> attributeValuesOccurrence = countAttributeValuesOccurrence(data);
+//        Enumeration attributes = data.enumerateAttributes();
+//
+//        while (attributes.hasMoreElements()) {
+//            attribute = (Attribute) attributes.nextElement();
+//            System.out.println(attribute.name());
+//            for (int i = 0; i < classAttribute.numValues(); i++) {
+//                System.out.println(classAttribute.name() + " " + classAttribute.value(i));
+//                for (int j = 0; j < attribute.numValues(); j++) {
+//                    System.out.println("\t" + attribute.value(j) + " " + attributeValuesOccurrence.get(attribute.name()).get(attribute.value(j)).get(classAttribute.value(i)));
+//                }
+//            }
+//            System.out.println();
+//        }
     }
 
     private void pruneTree(){
@@ -211,7 +316,7 @@ public class MyC45 extends Classifier {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/weather.numeric.arff";
+        String fileName = "data/weather.nominal.arff";
         Instances data;
         try (BufferedReader br = new BufferedReader(
                 new FileReader(fileName))) {
@@ -220,10 +325,11 @@ public class MyC45 extends Classifier {
             data.setClassIndex(data.numAttributes() - 1);
 
             MyC45 myC45 = new MyC45();
-            //myC45.test(data);
-            myC45.buildClassifier(data);
-            System.out.println(Arrays.toString(myC45.getPrunableLeaf().toArray()));
-            myC45.getRoot().print("","");
+            myC45.setData(data);
+            myC45.buildClassifier();
+//            myC45.buildClassifier(data);
+//            System.out.println(Arrays.toString(myC45.getPrunableLeaf().toArray()));
+//            myC45.getRoot().print("","");
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

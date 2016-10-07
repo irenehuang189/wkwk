@@ -15,19 +15,21 @@ import java.util.*;
  * Created by irn on 05/10/2016.
  */
 public class MyID3 {
-    private MyNode tree;
+    protected MyNode tree;
+    protected Map<MyNode, Instances> nodeData;
     private Map<String, Map<String, Map<String, Integer>>> occurrences;
-    private Instances data;
+    protected Instances data;
 
     public MyID3() {
         tree = new MyNode("", 0);
+        nodeData = new HashMap<>();
     }
 
     public void setData(Instances data) {
         this.data = data;
     }
 
-    public void buildClassifier() {
+    public void buildClassifier() throws Exception {
         makeTree(null, "", data);
         System.out.println("\nStruktur pohon: ");
         tree.print("", "");
@@ -90,6 +92,7 @@ public class MyID3 {
                     System.out.println("Make tree " + subTree.getKey());
                     System.out.println();
                     makeTree(node, subTree.getKey(), subTree.getValue());
+                    nodeData.put(node.getChild(subTree.getKey()), subTree.getValue());
                 }
             }
         }
@@ -151,7 +154,7 @@ public class MyID3 {
         }
     }
 
-    private Map<String, Instances> getSplitData(Instances unsplitData, String attributeName) {
+    protected Map<String, Instances> getSplitData(Instances unsplitData, String attributeName) {
         Map<String, Instances> splitData = new HashMap<>();
         Attribute attribute = unsplitData.attribute(attributeName);
 
@@ -280,6 +283,8 @@ public class MyID3 {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

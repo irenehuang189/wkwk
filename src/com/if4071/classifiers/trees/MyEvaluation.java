@@ -22,6 +22,14 @@ public class MyEvaluation {
     private int incorrectInstances;
     private int totalInstances = 0;
 
+    public int getIncorrectInstances() {
+        return incorrectInstances;
+    }
+
+    public int getTotalInstances() {
+        return totalInstances;
+    }
+
     public void evaluateModel(MyC45 tree, Instances data){
         totalInstances = data.numInstances();
         inputActualClass(data);

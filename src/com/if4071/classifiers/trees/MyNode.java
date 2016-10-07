@@ -65,6 +65,10 @@ public class MyNode {
         children.put(attributeValue, child);
     }
 
+    public int numChildren() {
+        return children.size();
+    }
+
     public void removeAllChildren() {
         children.clear();
     }
