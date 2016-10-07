@@ -1,6 +1,5 @@
 package com.if4071.classifiers.trees;
 
-import weka.classifiers.Classifier;
 import weka.core.Attribute;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -40,20 +39,12 @@ public class MyID3 {
 
     private void makeTree(MyNode parent, String label, Instances data) {
         occurrences = countAttributeValuesOccurrence(data);
-
-//        int levelTest = 0;
-//        if (parent != null) {
-//            levelTest = parent.getLevel();
-//        }
         if(data.numInstances() != 0) {
             // Get root attribute
             String rootAttribute = "";
             double maxInfoGain = -999;
             for(int i=0; i<data.numAttributes()-1; i++) {
                 String attribute = data.attribute(i).name();
-//                System.out.println(attribute);
-//                System.out.println("Entropy total: " + countEntropyTotal(data));
-//                System.out.println("Remainder: " + countRemainder(data, attribute));
                 double infoGain = countEntropyTotal(data) - countRemainder(data, attribute);
                 if(infoGain > maxInfoGain) {
                     maxInfoGain = infoGain;
@@ -65,26 +56,15 @@ public class MyID3 {
             if (parent != null) {
                 level = parent.getLevel() + 1;
             }
-            System.out.println("Info gain: " + maxInfoGain);
             if(maxInfoGain == 0) {
                 // Create leaf
-//                int i=0;
-                // Get every instances class value
-//                while(i < data.numInstances()) {
-//                    System.out.println(data.instance(i).stringValue(data.classIndex()));
-//                    i++;
-//                }
-                System.out.println("Leaf: " + data.instance(0).stringValue(data.classIndex()) + ", level: " + level);
                 MyNode leaf = new MyNode(data.instance(0).stringValue(data.classIndex()), level, parent);
                 if(parent != null) {
-                    System.out.println("Label to parent: " + label);
                     parent.addChild(label, leaf);
                 }
             } else {
-                System.out.println("Node: " + rootAttribute + " level: " + level);
                 MyNode node = new MyNode(rootAttribute, level, parent);
                 if(parent != null) {
-                    System.out.println("Label to parent: " + label);
                     parent.addChild(label, node);
                 } else {
                     tree = node;
@@ -92,8 +72,6 @@ public class MyID3 {
 
                 Map<String, Instances> splitData = getSplitData(data, rootAttribute);
                 for(Map.Entry<String, Instances> subTree: splitData.entrySet()) {
-                    System.out.println("Make tree " + subTree.getKey());
-                    System.out.println();
                     makeTree(node, subTree.getKey(), subTree.getValue());
                     nodeData.put(node.getChild(subTree.getKey()), subTree.getValue());
                 }
@@ -234,7 +212,6 @@ public class MyID3 {
         double remainder = 0;
         for(int i=0; i<data.attribute(attribute).numValues(); i++) {
             String attributeValue = data.attribute(attribute).value(i);
-//            System.out.println("Sub remainder: " + countAttributeOccurrences(data, attribute, attributeValue)+ " / " + data.numInstances() + " * " + countEntropy(data, attribute, attributeValue));
             double subRemainder = countAttributeOccurrences(data, attribute, attributeValue) / (double)data.numInstances() * countEntropy(data, attribute, attributeValue);
             remainder += subRemainder;
         }
