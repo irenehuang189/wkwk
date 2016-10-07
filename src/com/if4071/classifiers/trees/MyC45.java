@@ -29,12 +29,21 @@ public class MyC45 extends MyID3 {
     public void buildClassifier() throws Exception {
         data = discretizeData(data);
         data = replaceMissingValues(data);
-        super.buildClassifier();
-        prunableLeaf.add(tree);
-        System.out.println("Prunable Leaf " + prunableLeaf.size());
-//        MyNode node = tree;
-//        node = node.getChild("rainy");
-//        System.out.println("Prune" + isPruned(node));
+        super.buildClassifier(data);
+        inputLeaf(tree);
+        System.out.println("Prunable Leaf: " + prunableLeaf.size());
+        pruneTree();
+    }
+
+    public void inputLeaf(MyNode root){
+        if (root.isLeaf()){
+            prunableLeaf.add(root);
+        }
+        else {
+            for (MyNode child: root.getChildren().values()) {
+                inputLeaf(child);
+            }
+        }
     }
 
     private Instances discretizeData(Instances data) throws Exception {
@@ -56,40 +65,6 @@ public class MyC45 extends MyID3 {
         replacedData = Filter.useFilter(data, filter);
 
         return replacedData;
-    }
-
-    private MyNode makeTree (Instances data, int i){
-        MyNode node = new MyNode("root", 0);
-        /*
-        kalau data kosong
-        if (data.numInstances() == 0){
-            node = new MyNode ("null");
-            return node;
-        }
-        /*
-        double[] infoGains = new double[data.numAttributes()];
-        Enumeration attEnum = data.enumerateAttributes();
-        while (attEnum.hasMoreElements())
-        {
-            Attribute att = (Attribute)attEnum.nextElement();
-            infoGains[att.index()] = computeInfoGain(data, att);
-        }
-             */
-
-        //i = angka asal cuma buat test
-//        if (i!=0){
-//            node = new MyNode(Integer.toString(i));
-//            node.addChild("1", makeTree(data, i-1));
-//            node.addChild("2", makeTree(data, 0));
-//        }
-//        else {
-//            node = new MyNode("leaf");
-//        }
-        return node;
-    }
-
-    private double computeInfoGain(Instances data, Attribute att){
-        return 0;
     }
 
     private Map<String, Map<String, Map<String, Integer>>> countAttributeValuesOccurrence(Instances data) {
@@ -129,7 +104,7 @@ public class MyC45 extends MyID3 {
         return attributeValuesOccurrence;
     }
 
-    private boolean isPruned(MyNode parentNode) {
+    private boolean isPruned(MyNode parentNode) throws Exception {
         float preSplitError, postSplitError;
         int numIncorrectInstances, numInstances, numLeaves;
         MyEvaluation myEvaluation;
@@ -141,7 +116,7 @@ public class MyC45 extends MyID3 {
         tempParentNode = new MyNode(prunedLabel, 0);
         this.root = tempParentNode;
         myEvaluation = new MyEvaluation();
-        myEvaluation.evaluateModel(this, data);
+        myEvaluation.evaluateModel(this, data,4);
         numIncorrectInstances = myEvaluation.getIncorrectInstances();
         System.out.println("Num Incorrect Instances " + numIncorrectInstances);
         numInstances = myEvaluation.getTotalInstances();
@@ -150,7 +125,7 @@ public class MyC45 extends MyID3 {
 
         this.root = parentNode;
         myEvaluation = new MyEvaluation();
-        myEvaluation.evaluateModel(this, data);
+        myEvaluation.evaluateModel(this, data,4);
         numIncorrectInstances = myEvaluation.getIncorrectInstances();
         System.out.println("Num Incorrect Instances " + numIncorrectInstances);
         numInstances = myEvaluation.getTotalInstances();
@@ -261,22 +236,30 @@ public class MyC45 extends MyID3 {
     }
 
     private void pruneTree(){
+        //System.out.println(prunableLeaf.toString());
         int lowestLevel = getLowestLevel();
         while ((lowestLevel >= 0) && !prunableLeaf.isEmpty()){
+            System.out.println("Level: " + lowestLevel);
             ArrayList<MyNode> lowestLeaf = getLowestLeaf(lowestLevel);
             pruneLowestLeaf(lowestLeaf);
             lowestLevel--;
+            System.out.println("Prunable: " + prunableLeaf.size());
         }
     }
 
     private int getLowestLevel(){
-        int lowestLevel = getPrunableLeaf().get(0).getLevel();
-        for (MyNode leaf: getPrunableLeaf()){
-            if (leaf.getLevel() < lowestLevel) {
-                lowestLevel = leaf.getLevel();
+        if (!getPrunableLeaf().isEmpty()) {
+            int lowestLevel = getPrunableLeaf().get(0).getLevel();
+            for (MyNode leaf : getPrunableLeaf()) {
+                System.out.print(leaf.getLevel() + " ");
+                if (leaf.getLevel() > lowestLevel) {
+                    lowestLevel = leaf.getLevel();
+                }
             }
+            return lowestLevel;
         }
-        return  lowestLevel;
+        else
+            return 0;
     }
 
     private ArrayList<MyNode> getLowestLeaf(int level){
@@ -286,24 +269,42 @@ public class MyC45 extends MyID3 {
                 lowestLeaf.add(leaf);
             }
         }
+
+        System.out.println("LowestLeaf: " + lowestLeaf.size());
         return lowestLeaf;
     }
 
     private void pruneLowestLeaf(ArrayList<MyNode> lowestLeaf){
-        for (MyNode leaf: getPrunableLeaf()) {
-            //check if all neighbors are leaves, if true check, else delete from prunableleaf
-                //check if prune, if true then add parent to prunableleaf and delete self and neighbors from prunableleaf and from tree
-                //else if not prune delete self from prunableleaf
-            /* if (leaf.neighborAreLeaves){
+        //check if all neighbors are leaves, if true check, else delete from prunableleaf
+//check if prune, if true then add parent to prunableleaf and delete self and neighbors from prunableleaf and from tree
+//else if not prune delete self from prunableleaf
+        lowestLeaf.stream().filter(leaf -> getPrunableLeaf().contains(leaf)).forEach(leaf -> {
+            if (leaf.isParentChildrenLeaf()) {
+                try {
+                    if (isPruned(leaf.getParent())){
+                        prunableLeaf.add(leaf.getParent());
+                        for (MyNode prunedLeaf : leaf.getParent().getChildren().values()) {
+                            System.out.print("Pruning: " + prunedLeaf.getLabel());
+                            prunableLeaf.remove(prunedLeaf);
+                            if (!prunableLeaf.contains(prunedLeaf)){
+                                System.out.println(" succeed!");
+                            }
+                        }
 
+                    } else {
+                        System.out.println(leaf.getLabel() + "not prune");
+                        prunableLeaf.remove(leaf);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
             else {
                 prunableLeaf.remove(leaf);
             }
-             */
-
-        }
+        });
     }
+
 
     private void checkPrunableLeafs(){
 

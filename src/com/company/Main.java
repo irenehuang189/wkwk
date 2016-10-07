@@ -3,6 +3,7 @@ import java.io.*;
 import java.util.Random;
 import java.util.Scanner;
 
+import com.if4071.classifiers.trees.MyC45;
 import com.if4071.classifiers.trees.MyEvaluation;
 import com.if4071.classifiers.trees.MyID3;
 import weka.classifiers.Classifier;
@@ -261,7 +262,7 @@ public class Main {
     }
 
 
-    public static void evaluateMyModel(int evalOpt, Classifier tree, Instances data, int treeOpt) throws Exception {
+    public static void evaluateMyModel(int evalOpt, MyID3 tree, Instances data, int treeOpt) throws Exception {
         MyEvaluation eval = new MyEvaluation();
 
         if ((evalOpt == 1) || (evalOpt == 2) || (evalOpt == 4)){
@@ -336,7 +337,7 @@ public class Main {
                 evaluateMyModel(evalOpt,treeMyID3,test,treeOpt);
                 break;
             case 4:
-                J48 treeMyC45 = new J48();
+                MyC45 treeMyC45 = new MyC45();
                 treeMyC45.buildClassifier(train);
                 evaluateMyModel(evalOpt,treeMyC45,test,treeOpt);
                 break;

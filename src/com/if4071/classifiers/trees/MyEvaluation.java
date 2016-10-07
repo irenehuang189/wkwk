@@ -24,7 +24,7 @@ public class MyEvaluation {
     private int incorrectInstances = 0;
     private int totalInstances = 0;
 
-    public void crossValidation(Classifier tree, Instances data, int treeOpt) throws Exception {
+    public void crossValidation(MyID3 tree, Instances data, int treeOpt) throws Exception {
         correctInstances = 0;
         //divide into 10
         ArrayList<Integer> startIndex = new ArrayList<>();
@@ -65,14 +65,14 @@ public class MyEvaluation {
         showResult();
     }
 
-    public void evaluateModel(Classifier tree, Instances data, int treeOpt) throws Exception {
+    public void evaluateModel(MyID3 tree, Instances data, int treeOpt) throws Exception {
         setTotalInstances(data.numInstances());
         correctInstances = 0;
         evaluate(tree, data,treeOpt);
         showResult();
     }
 
-    private void evaluate(Classifier tree, Instances data, int treeOpt) throws Exception {
+    private void evaluate(MyID3 tree, Instances data, int treeOpt) throws Exception {
         // if treeOpt = 3 then ID3, if 4  then C45
 
         inputActualClass(data);

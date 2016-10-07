@@ -15,7 +15,7 @@ import java.util.*;
 /**
  * Created by irn on 05/10/2016.
  */
-public class MyID3 extends Classifier {
+public class MyID3 {
     protected MyNode tree;
     private Map<String, Map<String, Map<String, Integer>>> occurrences;
     protected Instances data;
@@ -30,7 +30,7 @@ public class MyID3 extends Classifier {
         this.data = data;
     }
 
-    @Override
+
     public void buildClassifier(Instances data) throws Exception {
         setData(data);
         makeTree(null, "", data);
