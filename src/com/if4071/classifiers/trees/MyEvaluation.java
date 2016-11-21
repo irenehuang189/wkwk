@@ -55,12 +55,18 @@ public class MyEvaluation {
         Instances trainingSet;
         Instances testSet;
 
+        Discretize filter = new Discretize();
+
+        filter.setInputFormat(data);
+        filter.setBins(2);
+        data = Filter.useFilter(data, filter);
+
         for (int i=0; i < 10; i++){
             testSet = new Instances(data,startIndex.get(i),startIndex.get(i+1)-startIndex.get(i));
             trainingSet = new Instances(data);
 
             for (int j=startIndex.get(i); j < startIndex.get(i+1); j++){
-                trainingSet.delete(j);
+                trainingSet.delete(i);
             }
             if (treeOpt == 3) {
                 MyID3 newtree = new MyID3();
@@ -77,12 +83,6 @@ public class MyEvaluation {
                 newtree.buildClassifier();
                 getActualClass().clear();
                 getPredictedClass().clear();
-
-                Discretize filter = new Discretize();
-
-                filter.setInputFormat(data);
-                filter.setBins(2);
-                testSet = Filter.useFilter(testSet, filter);
 
                 evaluate(newtree, testSet, treeOpt);
 

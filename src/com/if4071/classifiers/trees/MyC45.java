@@ -33,7 +33,7 @@ public class MyC45 extends MyID3 {
         MyEvaluation eval = new MyEvaluation(data);
         eval.evaluateModel(this,data,4);
         inputLeaf(tree);
-        System.out.println("Prunable Leaf: " + prunableLeaf.size());
+        //System.out.println("Prunable Leaf: " + prunableLeaf.size());
         pruneTree();
         tree.print("","");
     }
@@ -139,8 +139,8 @@ public class MyC45 extends MyID3 {
         numLeaves = this.root.numChildren();
         postSplitError = countPostSplitError(numLeaves, numIncorrectInstances, numInstances);
 
-        System.out.println("Pre " + preSplitError);
-        System.out.println("Post " + postSplitError);
+        //System.out.println("Pre " + preSplitError);
+        //System.out.println("Post " + postSplitError);
         if (preSplitError >= postSplitError) {
             //this.root.removeAllChildren();
             //this.root.setLabel(prunedLabel);
@@ -244,11 +244,11 @@ public class MyC45 extends MyID3 {
         //System.out.println(prunableLeaf.toString());
         int lowestLevel = getLowestLevel();
         while ((lowestLevel >= 0) && !prunableLeaf.isEmpty()){
-            System.out.println("Level: " + lowestLevel);
+            //System.out.println("Level: " + lowestLevel);
             ArrayList<MyNode> lowestLeaf = new ArrayList<>(getLowestLeaf(lowestLevel));
             pruneLowestLeaf(lowestLeaf);
             lowestLevel--;
-            System.out.println("Prunable: " + prunableLeaf.size());
+            //System.out.println("Prunable: " + prunableLeaf.size());
         }
     }
 
@@ -256,7 +256,7 @@ public class MyC45 extends MyID3 {
         if (!getPrunableLeaf().isEmpty()) {
             int lowestLevel = getPrunableLeaf().get(0).getLevel();
             for (MyNode leaf : getPrunableLeaf()) {
-                System.out.print(leaf.getLevel() + " ");
+                //System.out.print(leaf.getLevel() + " ");
                 if (leaf.getLevel() > lowestLevel) {
                     lowestLevel = leaf.getLevel();
                 }
@@ -275,7 +275,7 @@ public class MyC45 extends MyID3 {
             }
         }
 
-        System.out.println("LowestLeaf: " + lowestLeaf.size());
+        //System.out.println("LowestLeaf: " + lowestLeaf.size());
         return lowestLeaf;
     }
 
@@ -290,19 +290,19 @@ public class MyC45 extends MyID3 {
                 MyNode parent = leaf.getParent();
 
                 Collection<MyNode> children = parent.getChildren().values();
-                System.out.println("Now checking: " + parent.getLabel() + " as parent node.");
-                System.out.println("Children size: " + children.size());
+                //System.out.println("Now checking: " + parent.getLabel() + " as parent node.");
+                //System.out.println("Children size: " + children.size());
                 if (!checked.contains(parent)) {
                     if (isPruned(parent)) {
-                        System.out.println("Parent " + parent.getLabel() + " will be pruned!!");
+                        //System.out.println("Parent " + parent.getLabel() + " will be pruned!!");
 
                         prunableLeaf.add(parent);
                         //System.out.println("Children size: " + children.size());
                         for (MyNode prunedLeaf : children) {
-                            System.out.print("Pruning: " + prunedLeaf.getLabel());
+                            //System.out.print("Pruning: " + prunedLeaf.getLabel());
                             prunableLeaf.remove(prunedLeaf);
                             if (!prunableLeaf.contains(prunedLeaf)) {
-                                System.out.println(" succeed!");
+                                //System.out.println(" succeed!");
                             }
                         }
                         String prunedLabel = getMostOccurClassValue(nodeData.get(parent));
@@ -313,7 +313,7 @@ public class MyC45 extends MyID3 {
                         System.out.println("finished");
 
                     } else {
-                        System.out.println(parent.getLabel() + " will not be pruned");
+                        //System.out.println(parent.getLabel() + " will not be pruned");
                         prunableLeaf.remove(leaf);
                     }
 
@@ -338,7 +338,7 @@ public class MyC45 extends MyID3 {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/mahasiswa.arff";
+        String fileName = "data/weather.numeric.arff";
         Instances data;
         try (BufferedReader br = new BufferedReader(
                 new FileReader(fileName))) {
@@ -360,11 +360,11 @@ public class MyC45 extends MyID3 {
             myC45.buildClassifier();
 
             MyEvaluation eval = new MyEvaluation();
-            eval.evaluateModel(myC45, data, 4);
-            eval.showResult();
-
-            //eval.crossValidation(myC45, data, 4);
+            //eval.evaluateModel(myC45, data, 4);
             //eval.showResult();
+
+            eval.crossValidation(myC45, data, 4);
+            eval.showResult();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
