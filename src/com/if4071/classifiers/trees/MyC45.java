@@ -49,7 +49,7 @@ public class MyC45 extends MyID3 {
         }
     }
 
-    private Instances discretizeData(Instances data) throws Exception {
+    public Instances discretizeData(Instances data) throws Exception {
         Instances discreteData;
         Discretize filter = new Discretize();
 
@@ -108,6 +108,9 @@ public class MyC45 extends MyID3 {
     }
 
     private boolean isPruned(MyNode parentNode) throws Exception {
+        if (parentNode.isRoot()){
+            return false;
+        }
         float preSplitError, postSplitError;
         int numIncorrectInstances, numInstances, numLeaves;
         MyEvaluation myEvaluation;
@@ -138,13 +141,12 @@ public class MyC45 extends MyID3 {
 
         System.out.println("Pre " + preSplitError);
         System.out.println("Post " + postSplitError);
-        if (preSplitError <= postSplitError) {
-            this.root.removeAllChildren();
-            this.root.setLabel(prunedLabel);
+        if (preSplitError >= postSplitError) {
+            //this.root.removeAllChildren();
+            //this.root.setLabel(prunedLabel);
             return true;
         }
-
-        return false;
+        else return false;
     }
 
     private String getMostOccurClassValue(Instances data) {
@@ -284,35 +286,41 @@ public class MyC45 extends MyID3 {
 
         ArrayList<MyNode> checked = new ArrayList<>();
         lowestLeaf.stream().filter(leaf -> getPrunableLeaf().contains(leaf)).forEach(leaf -> {
-            if (leaf.isParentChildrenLeaf() && !leaf.isRoot()) {
-                try {
-                    MyNode parent = leaf.getParent();
-                    Collection<MyNode> children = parent.getChildren().values();
+            if (leaf.isParentChildrenLeaf() && !leaf.isRoot()) try {
+                MyNode parent = leaf.getParent();
 
-                    System.out.println("Children size: " + children.size());
-                    if (!checked.contains(parent)){
-                        if (isPruned(parent)){
-                            System.out.println(parent.getLabel() + " prune!!");
-                            prunableLeaf.add(parent);
-                            System.out.println("Children size: " + children.size());
-                            for (MyNode prunedLeaf : children) {
-                                System.out.print("Pruning: " + prunedLeaf.getLabel());
-                                prunableLeaf.remove(prunedLeaf);
-                                if (!prunableLeaf.contains(prunedLeaf)){
-                                    System.out.println(" succeed!");
-                                }
+                Collection<MyNode> children = parent.getChildren().values();
+                System.out.println("Now checking: " + parent.getLabel() + " as parent node.");
+                System.out.println("Children size: " + children.size());
+                if (!checked.contains(parent)) {
+                    if (isPruned(parent)) {
+                        System.out.println("Parent " + parent.getLabel() + " will be pruned!!");
+
+                        prunableLeaf.add(parent);
+                        //System.out.println("Children size: " + children.size());
+                        for (MyNode prunedLeaf : children) {
+                            System.out.print("Pruning: " + prunedLeaf.getLabel());
+                            prunableLeaf.remove(prunedLeaf);
+                            if (!prunableLeaf.contains(prunedLeaf)) {
+                                System.out.println(" succeed!");
                             }
-
-                        } else {
-                            System.out.println(leaf.getLabel() + "- not prune");
-                            prunableLeaf.remove(leaf);
                         }
+                        String prunedLabel = getMostOccurClassValue(nodeData.get(parent));
+                        parent.removeAllChildren();
+                        parent.setLabel(prunedLabel);
+                        System.out.println("new tree:");
+                        tree.print("","");
+                        System.out.println("finished");
 
-                        checked.add(parent);
+                    } else {
+                        System.out.println(parent.getLabel() + " will not be pruned");
+                        prunableLeaf.remove(leaf);
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
+
+                    checked.add(parent);
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             else {
                 prunableLeaf.remove(leaf);
@@ -330,7 +338,7 @@ public class MyC45 extends MyID3 {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/weather.nominal.arff";
+        String fileName = "data/mahasiswa.arff";
         Instances data;
         try (BufferedReader br = new BufferedReader(
                 new FileReader(fileName))) {
@@ -338,14 +346,25 @@ public class MyC45 extends MyID3 {
             data = arff.getData();
             data.setClassIndex(data.numAttributes() - 1);
 
+            /*double percent = 66;
+            int trainSize = (int) Math.round(data.numInstances() * percent / 100);
+            int testSize = data.numInstances() - trainSize;
+            data.randomize(new Random());
+
+            Instances train = new Instances(data, 0, trainSize);
+            Instances test = new Instances(data, trainSize, testSize);
+            */
+
             MyC45 myC45 = new MyC45();
             myC45.setData(data);
             myC45.buildClassifier();
 
             MyEvaluation eval = new MyEvaluation();
             eval.evaluateModel(myC45, data, 4);
+            eval.showResult();
 
-            eval.crossValidation(myC45, data, 4);
+            //eval.crossValidation(myC45, data, 4);
+            //eval.showResult();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

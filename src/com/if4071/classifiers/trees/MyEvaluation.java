@@ -7,6 +7,7 @@ import weka.core.Instance;
 import weka.core.Instances;
 import weka.core.converters.ArffLoader;
 import weka.filters.Filter;
+import weka.filters.unsupervised.attribute.Discretize;
 import weka.filters.unsupervised.attribute.ReplaceMissingValues;
 
 import java.io.BufferedReader;
@@ -67,15 +68,22 @@ public class MyEvaluation {
                 getActualClass().clear();
                 getPredictedClass().clear();
                 evaluate(newtree, testSet, treeOpt);
-
-
-
             }
             else if (treeOpt == 4) {
                 MyC45 newtree = new MyC45();
-                newtree.buildClassifier(trainingSet);
+
+                data = newtree.discretizeData(data);
+                newtree.setData(data);
+                newtree.buildClassifier();
                 getActualClass().clear();
                 getPredictedClass().clear();
+
+                Discretize filter = new Discretize();
+
+                filter.setInputFormat(data);
+                filter.setBins(2);
+                testSet = Filter.useFilter(testSet, filter);
+
                 evaluate(newtree, testSet, treeOpt);
 
 
@@ -86,13 +94,26 @@ public class MyEvaluation {
             //showResult();
         }
 
-        showResult();
+        //showResult();
     }
 
     public void evaluateModel(MyID3 tree, Instances data, int treeOpt) throws Exception {
         setTotalInstances(data.numInstances());
         correctInstances = 0;
+
+        if (treeOpt == 4){
+            Discretize filter = new Discretize();
+
+            filter.setInputFormat(data);
+            filter.setBins(2);
+            data = Filter.useFilter(data, filter);
+        }
         evaluate(tree, data,treeOpt);
+        //showResult();
+    }
+
+    public void evaluateData(MyID3 tree, Instances data, int treeOpt) throws Exception {
+        evaluateModel(tree,data,treeOpt);
         showResult();
     }
 
@@ -118,7 +139,8 @@ public class MyEvaluation {
         String value;
         ReplaceMissingValues replace = new ReplaceMissingValues();
         replace.setInputFormat(data);
-        data = Filter.useFilter(data, replace);
+        //data = Filter.useFilter(data, replace);
+
 
         while (!node.isLeaf()){
             value = instance.stringValue((data.attribute(node.getLabel())));

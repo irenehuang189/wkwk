@@ -286,10 +286,12 @@ public class MyID3 {
 
             System.out.println("Result\n-------");
             evaluation.evaluateModel(myID3,data,3);
+            evaluation.showResult();
 
 
             System.out.println("\n\n10-Fold\n-------");
             evaluation.crossValidation(myID3,data,3);
+            evaluation.showResult();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();
