@@ -338,7 +338,7 @@ public class MyC45 extends MyID3 {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/weather.numeric.arff";
+        String fileName = "data/iris.arff";
         Instances data;
         try (BufferedReader br = new BufferedReader(
                 new FileReader(fileName))) {
