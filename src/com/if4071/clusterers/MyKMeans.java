@@ -45,25 +45,30 @@ public class MyKMeans {
     }
 
     private void calculateCentroids(){
-        //clusters.put(currentCentroids.instance(0),data);
+        // debug set dummy cluster
+        // clusters.put(currentCentroids.instance(0),data);
         //System.out.println(clusters.toString());
-        //oldcentroid
-        for(Instances cluster: clusters.values()){
-            Instance newCentroid = new Instance(cluster.numAttributes());
-            newCentroid.setDataset(cluster);
-            for(int i = 0; i < cluster.numAttributes(); i++){
-                double meanOrMode =  cluster.meanOrMode(i);
 
-                if(cluster.attribute(i).isNumeric()){
-                    newCentroid.setValue(i, meanOrMode);
+        for(int i=0; i < currentCentroids.numInstances(); i++){
+            Instances cluster = clusters.get(currentCentroids.instance(i));
+
+            for(int j = 0; j < cluster.numAttributes(); j++){
+                double meanOrMode =  cluster.meanOrMode(j);
+
+                if(cluster.attribute(j).isNumeric()){
+                    //System.out.println(meanOrMode);
+                    currentCentroids.instance(i).setValue(j, meanOrMode);
                 }
                 else {
-                    String meanOrModeValue = cluster.attribute(i).value((int)meanOrMode);
-                    newCentroid.setValue(i, meanOrModeValue);
+                    String meanOrModeValue = cluster.attribute(j).value((int)meanOrMode);
+                    //System.out.println(meanOrModeValue);
+                    currentCentroids.instance(i).setValue(j, meanOrModeValue);
                 }
 
             }
-            System.out.println("new centroid: " + newCentroid.toString());
+
+            System.out.println("new centroid: " + currentCentroids.instance(i).toString());
+
         }
     }
 
@@ -83,8 +88,7 @@ public class MyKMeans {
 //            scanner.nextLine();
             numCluster = 1;
             myKMeans.buildClusterer(data, numCluster);
-            System.out.println(myKMeans.currentCentroids.toString());
-            System.out.println("Map:");
+            //System.out.println(myKMeans.currentCentroids.toString());
             myKMeans.calculateCentroids();
 
         } catch (FileNotFoundException e) {
