@@ -73,7 +73,7 @@ public class Main {
         return option;
     }
 
-    public static String getArffFile(){
+    private static String getArffFile(){
         System.out.println("**                                                        **");
         System.out.println("************************************************************");
         System.out.println("**                                                        **");
@@ -81,7 +81,7 @@ public class Main {
         return scanner.next();
     }
 
-    public static int getClusterNum(){
+    private static int getClusterNum(){
         System.out.println("**                                                        **");
         System.out.println("************************************************************");
         System.out.println("**                                                        **");

@@ -131,7 +131,6 @@ public class MyAgnes {
                 result += " ";
             }
         }
-//        System.out.println(result);
         return result;
     }
 
@@ -262,7 +261,7 @@ public class MyAgnes {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/iris.arff";
+        String fileName = "data/weather.nominal.arff";
         try {
             BufferedReader br = new BufferedReader(new FileReader(fileName));
             ArffLoader.ArffReader arffReader = new ArffLoader.ArffReader(br);
@@ -270,7 +269,7 @@ public class MyAgnes {
             data.setClassIndex(data.numAttributes() - 1);
 
             long startTime = System.nanoTime();
-            MyAgnes myAgnes = new MyAgnes(data, 4, 0);
+            MyAgnes myAgnes = new MyAgnes(data, 6, 0);
             myAgnes.buildClusterer();
             long elapsedTime = System.nanoTime() - startTime;
             myAgnes.printResult(elapsedTime);
