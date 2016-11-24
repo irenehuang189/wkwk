@@ -8,6 +8,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Created by irn on 23/11/2016.
@@ -55,65 +56,31 @@ public class MyAgnes {
     public void buildClusterer() {
         initDistances();
 
-        ///printDistances(initDistances);
         MyPairDistance nearestPairDistance = getNearestInitDistances(initDistances);
-        ///System.out.println("indices:" + indices);
         mergeNearestIndices(nearestPairDistance);
-        ///System.out.println("indices:" + indices);
 
         while(indices.size() > clusterNum) {
             buildNewCluster();
-//            System.out.println();
         }
     }
 
-    public void printResult() {
-        System.out.println("=== Run information ===\n");
-        System.out.println("Relation:\t" + data.relationName());
-        System.out.println("Instances:\t" + data.numInstances());
-        System.out.println("Attributes:\t" + data.numAttributes());
-        for (int i = 0; i < data.numAttributes(); i++) {
-            System.out.println("\t\t\t" + data.attribute(i).name());
-        }
-
-        System.out.println("\n\n=== Clustering model (full training set) ===\n");
-        int clusterNum = 0;
-        for(int i=0; i<leaves.size()-1; i++) {
-            MyAgnesNode node = leaves.get(i);
-            if(node.getParent() == null) {
-                System.out.println("Cluster " + clusterNum + "\n");
-                node.print("", "");
-                clusterNum++;
-            }
-        }
-        System.out.println("Cluster " + clusterNum + "\n");
-        leaves.get(leaves.size()-1).print("", "");
-
-        System.out.println("\n\n\nTime taken to build model : " + " seconds");
-        System.out.println("\n=== Model and evaluation on training set ===\n");
-        System.out.println("Clustered Instances\n");
-        for(int i=0; i<indices.size(); i++) {
-            int clusterDataNum = indices.get(i).size();
-            int percentage = clusterDataNum / data.numInstances();
-            System.out.println(i + "\t" + clusterDataNum + "( " + percentage + "%)");
-        }
-    }
-
-    public void buildNewCluster() {
+    private void buildNewCluster() {
         double[][] newDistances = new double[indices.size()][indices.size()];
         for(int i=0; i<indices.size(); i++) {
             for(int j=0; j<indices.size(); j++) {
-                newDistances[i][j] = getNearestDistanceBetweenClusters(indices.get(i), indices.get(j));
+                if(i != j) {
+                    newDistances[i][j] = getNearestDistanceBetweenClusters(indices.get(i), indices.get(j));
+                } else {
+                    newDistances[i][j] = 0;
+                }
             }
         }
-        ///printDistances(newDistances);
 
         MyPairDistance nearestPairDistance = getNearestInitDistances(newDistances);
         mergeNearestIndices(nearestPairDistance);
-//        System.out.println("indices:" + indices);
     }
 
-    public void mergeNearestIndices(MyPairDistance pairDistance) {
+    private void mergeNearestIndices(MyPairDistance pairDistance) {
         ArrayList<Integer> nearestIndices = pairDistance.getNearestPair();
         // Get node label in string
         ArrayList<String> nodeLabels = new ArrayList<>();
@@ -122,7 +89,12 @@ public class MyAgnes {
             int idx = nearestIndices.get(i);
             String nodeLabel = intArrayToString(indices.get(idx));
             nodeLabels.add(nodeLabel);
-            parentLabel += nodeLabels.get(i);
+
+            // Get parent label
+            if(!parentLabel.isEmpty()) {
+                parentLabel += " ";
+            }
+            parentLabel += nodeLabel;
         }
 
         // Create new parent and add to current tree
@@ -155,11 +127,15 @@ public class MyAgnes {
         String result = "";
         for(int i=0; i<arr.size(); i++) {
             result += arr.get(i);
+            if (i < arr.size()-1) {
+                result += " ";
+            }
         }
+//        System.out.println(result);
         return result;
     }
 
-    public double getNearestDistanceBetweenClusters(ArrayList<Integer> cluster1, ArrayList<Integer> cluster2) {
+    private double getNearestDistanceBetweenClusters(ArrayList<Integer> cluster1, ArrayList<Integer> cluster2) {
         double chosenDistance = 0;
         switch (linkType){
             case SINGLE:
@@ -193,7 +169,7 @@ public class MyAgnes {
         return chosenDistance;
     }
 
-    public MyPairDistance getNearestInitDistances(double[][] distances) {
+    private MyPairDistance getNearestInitDistances(double[][] distances) {
         double minDistance = 999999999;
         ArrayList<Integer> nearestPair = new ArrayList<>();
         for(int i=0; i<distances.length; i++) {
@@ -206,13 +182,11 @@ public class MyAgnes {
                 }
             }
         }
-//        System.out.println(indices.get(nearestPair.get(0)) + " " + indices.get(nearestPair.get(1)));
-//        System.out.println("Pair: " + data.instance(indices.get(nearestPair.get(0)).get(0)) + " " + data.instance(indices.get(nearestPair.get(1)).get(0)));
 
         return new MyPairDistance(nearestPair, minDistance);
     }
 
-    public void initDistances() {
+    private void initDistances() {
         int numInstances = data.numInstances();
         for(int i=0; i<numInstances; i++) {
             for(int j=0; j<numInstances; j++) {
@@ -222,6 +196,39 @@ public class MyAgnes {
                     initDistances[i][j] = distanceFunction.distance(data.instance(i), data.instance(j));
                 }
             }
+        }
+    }
+
+    public void printResult(long elapsedTime) {
+        System.out.println("=== Run information ===\n");
+        System.out.println("Relation:\t" + data.relationName());
+        System.out.println("Instances:\t" + data.numInstances());
+        System.out.println("Attributes:\t" + data.numAttributes());
+        for (int i = 0; i < data.numAttributes(); i++) {
+            System.out.println("\t\t\t" + data.attribute(i).name());
+        }
+
+        System.out.println("\n\n=== Clustering model (full training set) ===\n");
+        int clusterNum = 0;
+        for (int i = 0; i < leaves.size() - 1; i++) {
+            MyAgnesNode node = leaves.get(i);
+            if (node.getParent() == null) {
+                System.out.println("Cluster " + clusterNum);
+                node.print("", "");
+                System.out.println();
+                clusterNum++;
+            }
+        }
+        System.out.println("Cluster " + clusterNum);
+        leaves.get(leaves.size() - 1).print("", "");
+
+        System.out.println("\n\n\nTime taken to build model : " + TimeUnit.NANOSECONDS.toSeconds(elapsedTime) + " seconds");
+        System.out.println("\n=== Model and evaluation on training set ===\n");
+        System.out.println("Clustered Instances\n");
+        for (int i = 0; i < indices.size(); i++) {
+            int clusterDataNum = indices.get(i).size();
+            double percentage = (double) clusterDataNum / (double) data.numInstances() * 100;
+            System.out.println(i + "\t" + clusterDataNum + "( " + (int) percentage + "%)");
         }
     }
 
@@ -242,9 +249,11 @@ public class MyAgnes {
             Instances data = arffReader.getData();
             data.setClassIndex(data.numAttributes() - 1);
 
-            MyAgnes myAgnes = new MyAgnes(data, 2, 0);
+            long startTime = System.nanoTime();
+            MyAgnes myAgnes = new MyAgnes(data, 2, 1);
             myAgnes.buildClusterer();
-            myAgnes.printResult();
+            long elapsedTime = System.nanoTime() - startTime;
+            myAgnes.printResult(elapsedTime);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

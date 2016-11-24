@@ -30,6 +30,13 @@ public class Main {
 
         if(clusterOpt == 1){
             /* Jika memilih MyAgnes */
+            int linkType = getLinkType();
+            long startTime = System.nanoTime();
+            MyAgnes myAgnes = new MyAgnes(data, numCluster, linkType);
+            myAgnes.buildClusterer();
+            long elapsedTime = System.nanoTime() - startTime;
+
+            myAgnes.printResult(elapsedTime);
         }
         else if (clusterOpt == 2){
             /* Jika memilih MyKMeans */
@@ -83,5 +90,24 @@ public class Main {
         System.out.println("**                                                        **");
         System.out.println("************************************************************");
         return num;
+    }
+
+    private static int getLinkType(){
+        int option;
+        System.out.println("************************************************************");
+        System.out.println("**                                                        **");
+        System.out.println("**         Pilih jenis tipe link yang diinginkan:         **");
+        System.out.println("**                      1. Single link                    **");
+        System.out.println("**                      2. Complete link                  **");
+        System.out.print("**               Masukkan pilihan tipe link: ");
+        option = scanner.nextInt();
+
+        while ((option != 1) && (option != 2)){
+            System.out.println("**      Pilihan tidak ada. Masukkan pilihan 1 atau 2.     **");
+            System.out.print("**               Masukkan pilihan tipe link: ");
+            option = scanner.nextInt();
+        }
+
+        return option;
     }
 }
