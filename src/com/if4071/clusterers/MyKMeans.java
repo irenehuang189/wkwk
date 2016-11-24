@@ -1,6 +1,5 @@
 package com.if4071.clusterers;
 
-import weka.clusterers.RandomizableClusterer;
 import weka.core.EuclideanDistance;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -21,6 +20,7 @@ import java.util.Scanner;
 public class MyKMeans {
     private Instances currentCentroids;
     private Instances data;
+    private int numAttribute;
     private int numCluster;
     private int numData;
     private Map<Instance, Instances> clusters;
@@ -31,13 +31,19 @@ public class MyKMeans {
 
     public void buildClusterer(Instances data, int numCluster) {
         this.data = data;
+        this.numAttribute = this.data.numAttributes();
         this.numCluster = numCluster;
         this.currentCentroids = new Instances(this.data, this.numCluster);
         this.numData = this.data.numInstances();
         this.clusters.clear();
 
+        Instances previousCentroids = new Instances(this.data, this.numCluster);
+
         initializeCentroids();
-        clusterByEuclideanDistance();
+        do {
+            clusterByEuclideanDistance();
+            updatePreviousCentroids(previousCentroids);
+        } while (!isConvergen(previousCentroids));
     }
 
     private void initializeCentroids() {
@@ -55,15 +61,12 @@ public class MyKMeans {
 
         for (int i = 0; i < numData; i++) {
             instance = data.instance(i);
-            System.out.println(i);
             closestCentroid = currentCentroids.instance(0);
             minDistance = euclidean.distance(instance, closestCentroid);
-            System.out.println(minDistance);
 
             for (int j = 1; j < numCluster; j++) {
                 centroid = currentCentroids.instance(j);
                 distance = euclidean.distance(instance, centroid);
-                System.out.println(distance);
 
                 if (distance < minDistance) {
                     minDistance = distance;
@@ -72,7 +75,49 @@ public class MyKMeans {
             }
 
             clusters.get(closestCentroid).add(instance);
-            System.out.println();
+        }
+    }
+
+    private boolean isConvergen(Instances previousCentroids) {
+        Instance currentCentroid, previousCentroid;
+
+        for (int i = 0; i < numCluster; i++) {
+            currentCentroid = currentCentroids.instance(i);
+            previousCentroid = previousCentroids.instance(i);
+
+            for (int j = 0; j < numAttribute; j++) {
+                if (currentCentroid.attribute(j).isNominal()) {
+                    if (!currentCentroid.stringValue(j).equals(previousCentroid.stringValue(j))) {
+                        System.out.println("false");
+                        return false;
+                    }
+                } else {
+                    if (currentCentroid.value(j) != previousCentroid.value(j)) {
+                        System.out.println("false");
+                        return false;
+                    }
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void updatePreviousCentroids(Instances previousCentroids) {
+        int numPreviousCentroidsInstance = previousCentroids.numInstances();
+
+        for (int i = 0; i < numCluster; i++) {
+            if (numPreviousCentroidsInstance == 0) {
+                previousCentroids.add(currentCentroids.instance(i));
+            } else {
+                for (int j = 0; j < numAttribute; j++) {
+                    if (data.attribute(j).isNominal()) {
+                        previousCentroids.instance(i).setValue(j, currentCentroids.instance(i).stringValue(j));
+                    } else {
+                        previousCentroids.instance(i).setValue(j, currentCentroids.instance(i).value(j));
+                    }
+                }
+            }
         }
     }
 
@@ -100,7 +145,7 @@ public class MyKMeans {
         int numCluster;
         MyKMeans myKMeans = new MyKMeans();
         Scanner scanner = new Scanner(System.in);
-        String fileName = "data/weather.nominal.arff";
+        String fileName = "data/weather.numeric.arff";
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(fileName));
