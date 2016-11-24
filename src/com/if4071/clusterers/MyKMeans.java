@@ -121,6 +121,34 @@ public class MyKMeans {
         }
     }
 
+    private void calculateCentroids(){
+        // debug set dummy cluster
+        // clusters.put(currentCentroids.instance(0),data);
+        //System.out.println(clusters.toString());
+
+        for(int i=0; i < currentCentroids.numInstances(); i++){
+            Instances cluster = clusters.get(currentCentroids.instance(i));
+
+            for(int j = 0; j < cluster.numAttributes(); j++){
+                double meanOrMode =  cluster.meanOrMode(j);
+
+                if(cluster.attribute(j).isNumeric()){
+                    //System.out.println(meanOrMode);
+                    currentCentroids.instance(i).setValue(j, meanOrMode);
+                }
+                else {
+                    String meanOrModeValue = cluster.attribute(j).value((int)meanOrMode);
+                    //System.out.println(meanOrModeValue);
+                    currentCentroids.instance(i).setValue(j, meanOrModeValue);
+                }
+
+            }
+
+            System.out.println("new centroid: " + currentCentroids.instance(i).toString());
+
+        }
+    }
+
     public void printResult() {
         Instance centroid;
         Instances cluster;
@@ -157,6 +185,7 @@ public class MyKMeans {
 //            scanner.nextLine();
             numCluster = 2;
             myKMeans.buildClusterer(data, numCluster);
+            myKMeans.calculateCentroids();
             myKMeans.printResult();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
