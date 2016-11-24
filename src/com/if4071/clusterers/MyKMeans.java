@@ -3,15 +3,12 @@ package com.if4071.clusterers;
 import weka.core.EuclideanDistance;
 import weka.core.Instance;
 import weka.core.Instances;
-import weka.core.SystemInfo;
 import weka.core.converters.ArffLoader;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.math.BigDecimal;
-import java.math.MathContext;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
