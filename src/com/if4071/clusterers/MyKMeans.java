@@ -1,5 +1,6 @@
 package com.if4071.clusterers;
 
+import weka.core.Attribute;
 import weka.core.EuclideanDistance;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -20,9 +21,11 @@ import java.util.Scanner;
 public class MyKMeans {
     private Instances currentCentroids;
     private Instances data;
+    private Instances initialCentroids;
     private int numAttributes;
     private int numClusters;
     private int numData;
+    private int numIterations;
     private Map<Instance, Instances> clusters;
 
     public MyKMeans() {
@@ -34,23 +37,32 @@ public class MyKMeans {
         this.numAttributes = this.data.numAttributes();
         this.numClusters = numCluster;
         this.currentCentroids = new Instances(this.data, this.numClusters);
+        this.initialCentroids = new Instances(this.data, this.numClusters);
         this.numData = this.data.numInstances();
+        this.numIterations = 0;
         this.clusters.clear();
 
         Instances previousCentroids = new Instances(this.data, this.numClusters);
 
         initializeCentroids();
         do {
+            numIterations++;
             clusterByEuclideanDistance();
             updatePreviousCentroids(previousCentroids);
             calculateCentroids();
         } while (!isConvergent(previousCentroids));
+
+        printResult();
     }
 
     private void initializeCentroids() {
+        Instance centroid;
         int[] centroidIndexes = new Random(10).ints(0, numData).distinct().limit(numClusters).toArray();
+
         for (int i = 0; i < centroidIndexes.length; i++) {
-            currentCentroids.add(data.instance(centroidIndexes[i]));
+            centroid = data.instance(centroidIndexes[i]);
+            initialCentroids.add(centroid);
+            currentCentroids.add(centroid);
             clusters.put(currentCentroids.instance(i), new Instances(data, numData));
         }
     }
@@ -146,22 +158,54 @@ public class MyKMeans {
         }
     }
 
-    public void printResult() {
+    private void printResult() {
+        Attribute attribute;
+        double meanOrModeValue;
         Instance centroid;
         Instances cluster;
-        int numClusterInstance;
+        int numClusterInstances;
 
-        System.out.println("\n HASIL CLUSTERING KMEANS");
+        System.out.println("=== Run information ===");
+        System.out.println();
+        System.out.println("Relation:\t" + data.relationName());
+        System.out.println("Instances:\t" + numData);
+        System.out.println("Attributes:\t" + numAttributes);
+        for (int i = 0; i < numAttributes; i++) {
+            System.out.println("\t\t\t" + data.attribute(i).name());
+        }
+        System.out.println();
+        System.out.println();
+        System.out.println("=== Clustering model ===");
+        System.out.println();
+        System.out.println("MyKMeans");
+        System.out.println("========");
+        System.out.println();
+        System.out.println("Number of iterations: " + numIterations);
+        System.out.println();
+        System.out.println("Initial starting points (random):");
+        System.out.println();
+        for (int i = 0; i < numClusters; i++) {
+            System.out.println("Cluster " + i + ": " + initialCentroids.instance(i));
+        }
+        System.out.println();
+        System.out.println("Final cluster centroids:");
         System.out.println();
         for (int i = 0; i < numClusters; i++) {
             centroid = currentCentroids.instance(i);
-            cluster = clusters.get(centroid);
-            numClusterInstance = cluster.numInstances();
-
-            System.out.println("Cluster " + (i + 1) + " (" + numClusterInstance + "): " + centroid);
-            for (int j = 0; j < numClusterInstance; j++) {
-                System.out.println(cluster.instance(j));
-            }
+            System.out.println("Cluster " + i + " (" + clusters.get(centroid).numInstances() + "): " + centroid);
+        }
+        System.out.println();
+        System.out.println();
+        System.out.println("=== Model and evaluation on training set ===");
+        System.out.println();
+        System.out.println("Clustered Instances");
+        System.out.println();
+        for (int i = 0; i < numClusters; i++) {
+            centroid = currentCentroids.instance(i);
+            numClusterInstances = clusters.get(centroid).numInstances();
+            System.out.print(i + "\t\t" + numClusterInstances + "\t(");
+            System.out.printf("%.2f", (double) numClusterInstances / (double) numData * 100);
+            System.out.print("%)");
             System.out.println();
         }
     }
@@ -170,7 +214,7 @@ public class MyKMeans {
         int numCluster;
         MyKMeans myKMeans = new MyKMeans();
         Scanner scanner = new Scanner(System.in);
-        String fileName = "data/weather.nominal.arff";
+        String fileName = "data/iris.arff";
 
         try {
             BufferedReader br = new BufferedReader(new FileReader(fileName));
@@ -182,8 +226,6 @@ public class MyKMeans {
 //            scanner.nextLine();
             numCluster = 2;
             myKMeans.buildClusterer(data, numCluster);
-            myKMeans.calculateCentroids();
-            myKMeans.printResult();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

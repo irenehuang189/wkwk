@@ -35,7 +35,6 @@ public class Main {
             /* Jika memilih MyKMeans */
             MyKMeans myKMeans = new MyKMeans();
             myKMeans.buildClusterer(data, numCluster);
-            myKMeans.printResult();
 
         }
     }
