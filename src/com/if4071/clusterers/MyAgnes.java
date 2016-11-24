@@ -210,17 +210,19 @@ public class MyAgnes {
 
         System.out.println("\n\n=== Clustering model (full training set) ===\n");
         int clusterNum = 0;
-        for (int i = 0; i < leaves.size() - 1; i++) {
+        for (int i = 0; i < leaves.size(); i++) {
             MyAgnesNode node = leaves.get(i);
             if (node.getParent() == null) {
                 System.out.println("Cluster " + clusterNum);
+                System.out.println("Intances:");
+                printInstances(node.getLabel());
+
+                System.out.println("\nTree:");
                 node.print("", "");
                 System.out.println();
                 clusterNum++;
             }
         }
-        System.out.println("Cluster " + clusterNum);
-        leaves.get(leaves.size() - 1).print("", "");
 
         System.out.println("\n\n\nTime taken to build model : " + TimeUnit.NANOSECONDS.toSeconds(elapsedTime) + " seconds");
         System.out.println("\n=== Model and evaluation on training set ===\n");
@@ -229,6 +231,24 @@ public class MyAgnes {
             int clusterDataNum = indices.get(i).size();
             double percentage = (double) clusterDataNum / (double) data.numInstances() * 100;
             System.out.println(i + "\t" + clusterDataNum + "( " + (int) percentage + "%)");
+        }
+    }
+
+    private void printInstances(String nodeLabel) {
+        int j = 0;
+        boolean isFound = false;
+        while(j < indices.size() && !isFound) {
+            String indicesString = intArrayToString(indices.get(j));
+            if(indicesString.equals(nodeLabel)) {
+                isFound = true;
+            } else {
+                j++;
+            }
+        }
+        for(int i=0; i<indices.get(j).size(); i++) {
+            int instanceIdx = indices.get(j).get(i);
+            Instance instance = data.instance(instanceIdx);
+            System.out.println(instance);
         }
     }
 
@@ -242,7 +262,7 @@ public class MyAgnes {
     }
 
     public static void main(String[] args) {
-        String fileName = "data/weather.arff";
+        String fileName = "data/iris.arff";
         try {
             BufferedReader br = new BufferedReader(new FileReader(fileName));
             ArffLoader.ArffReader arffReader = new ArffLoader.ArffReader(br);
@@ -250,7 +270,7 @@ public class MyAgnes {
             data.setClassIndex(data.numAttributes() - 1);
 
             long startTime = System.nanoTime();
-            MyAgnes myAgnes = new MyAgnes(data, 2, 1);
+            MyAgnes myAgnes = new MyAgnes(data, 4, 0);
             myAgnes.buildClusterer();
             long elapsedTime = System.nanoTime() - startTime;
             myAgnes.printResult(elapsedTime);
