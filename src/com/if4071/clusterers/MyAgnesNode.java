@@ -29,6 +29,10 @@ public class MyAgnesNode {
         return children;
     }
 
+    public MyAgnesNode getChild(String attributeValue) {
+        return children.get(attributeValue);
+    }
+
     public MyAgnesNode getParent() {
         return parent;
     }
@@ -47,10 +51,6 @@ public class MyAgnesNode {
 
     public void setLabel(String label) {
         this.label = label;
-    }
-
-    public MyAgnesNode getChild(String attributeValue) {
-        return children.get(attributeValue);
     }
 
     public void addChild(String attributeValue, MyAgnesNode child) {

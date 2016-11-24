@@ -1,8 +1,6 @@
 package com.if4071.clusterers;
 
-import weka.core.DistanceFunction;
-import weka.core.EuclideanDistance;
-import weka.core.Instances;
+import weka.core.*;
 import weka.core.converters.ArffLoader;
 
 import java.io.BufferedReader;
@@ -22,7 +20,7 @@ public class MyAgnes {
     private DistanceFunction distanceFunction;
     private double[][] initDistances;
     private ArrayList<ArrayList<Integer>> indices;
-    private MyAgnesNode tree;
+    private ArrayList<MyAgnesNode> leaves;
 
     final int SINGLE = 0;
     final int COMPLETE = 1;
@@ -39,11 +37,15 @@ public class MyAgnes {
         initDistances = new double[instancesNum][instancesNum];
 
         indices = new ArrayList<>();
+        leaves = new ArrayList<>();
         for(int i=0; i<instancesNum; i++) {
             ArrayList index = new ArrayList();
             index.add(i);
             indices.add(index);
+
+            leaves.add(new MyAgnesNode(String.valueOf(i)));
         }
+
     }
 
     public void setData(Instances data) {
@@ -53,15 +55,48 @@ public class MyAgnes {
     public void buildClusterer() {
         initDistances();
 
+        ///printDistances(initDistances);
         MyPairDistance nearestPairDistance = getNearestInitDistances(initDistances);
-        tree = new MyAgnesNode(String.valueOf(nearestPairDistance.getDistance()));
-        mergeNearestIndices(nearestPairDistance.getNearestPair());
-        System.out.println(nearestPairDistance.getDistance());
+        ///System.out.println("indices:" + indices);
+        mergeNearestIndices(nearestPairDistance);
+        ///System.out.println("indices:" + indices);
 
         while(indices.size() > clusterNum) {
             buildNewCluster();
+//            System.out.println();
         }
-        System.out.println(indices);
+    }
+
+    public void printResult() {
+        System.out.println("=== Run information ===\n");
+        System.out.println("Relation:\t" + data.relationName());
+        System.out.println("Instances:\t" + data.numInstances());
+        System.out.println("Attributes:\t" + data.numAttributes());
+        for (int i = 0; i < data.numAttributes(); i++) {
+            System.out.println("\t\t\t" + data.attribute(i).name());
+        }
+
+        System.out.println("\n\n=== Clustering model (full training set) ===\n");
+        int clusterNum = 0;
+        for(int i=0; i<leaves.size()-1; i++) {
+            MyAgnesNode node = leaves.get(i);
+            if(node.getParent() == null) {
+                System.out.println("Cluster " + clusterNum + "\n");
+                node.print("", "");
+                clusterNum++;
+            }
+        }
+        System.out.println("Cluster " + clusterNum + "\n");
+        leaves.get(leaves.size()-1).print("", "");
+
+        System.out.println("\n\n\nTime taken to build model : " + " seconds");
+        System.out.println("\n=== Model and evaluation on training set ===\n");
+        System.out.println("Clustered Instances\n");
+        for(int i=0; i<indices.size(); i++) {
+            int clusterDataNum = indices.get(i).size();
+            int percentage = clusterDataNum / data.numInstances();
+            System.out.println(i + "\t" + clusterDataNum + "( " + percentage + "%)");
+        }
     }
 
     public void buildNewCluster() {
@@ -71,17 +106,57 @@ public class MyAgnes {
                 newDistances[i][j] = getNearestDistanceBetweenClusters(indices.get(i), indices.get(j));
             }
         }
+        ///printDistances(newDistances);
 
         MyPairDistance nearestPairDistance = getNearestInitDistances(newDistances);
-        mergeNearestIndices(nearestPairDistance.getNearestPair());
-        System.out.println(nearestPairDistance.getDistance());
+        mergeNearestIndices(nearestPairDistance);
+//        System.out.println("indices:" + indices);
     }
 
-    public void mergeNearestIndices(ArrayList<Integer> nearestIndices) {
+    public void mergeNearestIndices(MyPairDistance pairDistance) {
+        ArrayList<Integer> nearestIndices = pairDistance.getNearestPair();
+        // Get node label in string
+        ArrayList<String> nodeLabels = new ArrayList<>();
+        String parentLabel = "";
+        for(int i=0; i<nearestIndices.size(); i++) {
+            int idx = nearestIndices.get(i);
+            String nodeLabel = intArrayToString(indices.get(idx));
+            nodeLabels.add(nodeLabel);
+            parentLabel += nodeLabels.get(i);
+        }
+
+        // Create new parent and add to current tree
+        MyAgnesNode parent = new MyAgnesNode(parentLabel);
+        leaves.add(parent);
+        for(int i=0; i<nodeLabels.size(); i++) {
+            boolean isFound = false;
+            int j = 0;
+            while(j<leaves.size() - 1 && !isFound) { // Stop when reach size-1 because the last index is parent
+                String label = leaves.get(j).getLabel();
+                if(label.equals(nodeLabels.get(i))) {
+                    isFound = true;
+                    leaves.get(j).setParent(parent);
+                    String edgeLabel = String.valueOf(pairDistance.getDistance()) + i;
+                    parent.addChild(edgeLabel, leaves.get(j));
+                } else {
+                    j++;
+                }
+            }
+        }
+
+        // Merge nearest indices
         Integer destIndex = nearestIndices.get(0);
         Integer oriIndex = nearestIndices.get(1);
         indices.get(destIndex).addAll(indices.get(oriIndex));
         indices.remove((int) oriIndex);
+    }
+
+    private String intArrayToString(ArrayList<Integer> arr) {
+        String result = "";
+        for(int i=0; i<arr.size(); i++) {
+            result += arr.get(i);
+        }
+        return result;
     }
 
     public double getNearestDistanceBetweenClusters(ArrayList<Integer> cluster1, ArrayList<Integer> cluster2) {
@@ -131,8 +206,8 @@ public class MyAgnes {
                 }
             }
         }
-        System.out.println(nearestPair.get(0) + " " + nearestPair.get(1));
-        System.out.println("Pair: " + data.instance(nearestPair.get(0)) + " " + data.instance(nearestPair.get(1)));
+//        System.out.println(indices.get(nearestPair.get(0)) + " " + indices.get(nearestPair.get(1)));
+//        System.out.println("Pair: " + data.instance(indices.get(nearestPair.get(0)).get(0)) + " " + data.instance(indices.get(nearestPair.get(1)).get(0)));
 
         return new MyPairDistance(nearestPair, minDistance);
     }
@@ -169,19 +244,7 @@ public class MyAgnes {
 
             MyAgnes myAgnes = new MyAgnes(data, 2, 0);
             myAgnes.buildClusterer();
-
-
-//            MyEvaluation evaluation = new MyEvaluation();
-
-//            System.out.println("Result\n-------");
-//            evaluation.evaluateModel(myAgnes,data,3);
-//            evaluation.showResult();
-//
-//
-//            System.out.println("\n\n10-Fold\n-------");
-//            evaluation.crossValidation(myAgnes,data,3);
-//            evaluation.showResult();
-
+            myAgnes.printResult();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
