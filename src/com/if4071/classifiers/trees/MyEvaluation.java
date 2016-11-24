@@ -91,10 +91,10 @@ public class MyEvaluation {
             }
 
 
-            //showResult();
+            showResult();
         }
 
-        showResult();
+        //showResult();
     }
 
     public void evaluateModel(MyID3 tree, Instances data, int treeOpt) throws Exception {

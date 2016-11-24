@@ -308,7 +308,7 @@ public class MyC45 extends MyID3 {
                         String prunedLabel = getMostOccurClassValue(nodeData.get(parent));
                         parent.removeAllChildren();
                         parent.setLabel(prunedLabel);
-                        System.out.println("new tree:");
+                        System.out.println("hasil pruning");
                         tree.print("","");
                         System.out.println("finished");
 
@@ -360,11 +360,12 @@ public class MyC45 extends MyID3 {
             myC45.buildClassifier();
 
             MyEvaluation eval = new MyEvaluation();
-            //eval.evaluateModel(myC45, data, 4);
+            eval.evaluateModel(myC45, data, 4);
             //eval.showResult();
 
-            eval.crossValidation(myC45, data, 4);
-            eval.showResult();
+            MyEvaluation eval2 = new MyEvaluation();
+            eval2.crossValidation(myC45, data, 4);
+            eval2.showResult();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

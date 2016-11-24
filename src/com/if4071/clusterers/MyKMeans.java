@@ -151,7 +151,7 @@ public class MyKMeans {
         Instances cluster;
         int numClusterInstance;
 
-        System.out.println("HASIL CLUSTERING KMEANS");
+        System.out.println("\n HASIL CLUSTERING KMEANS");
         System.out.println();
         for (int i = 0; i < numClusters; i++) {
             centroid = currentCentroids.instance(i);
